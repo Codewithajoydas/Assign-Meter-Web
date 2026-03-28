@@ -1,18 +1,20 @@
 import { NextResponse } from "next/server";
 
 export default function middleware(request) {
-  const token = request.cookies.get("token");
-  const isLoginPage = request.nextUrl.pathname === "/login";
+  const token = request.cookies.get("token")?.value;
+  const { pathname } = request.nextUrl;
 
-  if (!token && !isLoginPage) {
+  if (!token && pathname !== "/login") {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
-  if (token && isLoginPage) {
+  if (token && pathname === "/login") {
     return NextResponse.redirect(new URL("/meter", request.url));
   }
+
+  return NextResponse.next();
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
+  matcher: ["/((?!_next|api|favicon.ico).*)"],
 };
