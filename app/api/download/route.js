@@ -11,7 +11,7 @@ export async function GET(req) {
 
   const queryString = searchParams.toString();
 
-  const backendUrl = `http://localhost:3000/api/download${
+  const backendUrl = `https://assign-meter-backend.onrender.com/api/download${
     queryString ? `?${queryString}` : ""
   }`;
       

@@ -1,0 +1,9 @@
+.details {
+  display: none;
+}
+
+.profile:hover .details {
+  display: block;
+}
+
+/*# sourceMappingURL=header.css.map */

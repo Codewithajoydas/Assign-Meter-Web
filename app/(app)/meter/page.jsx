@@ -66,7 +66,7 @@ if (store) query.set("store", store);
 if (installationType) query.set("installationType", installationType);
 
 const res = await fetch(
-  `http://localhost:3000/api/getmeterdetails/pending?${query.toString()}`,
+  `https://assign-meter-backend.onrender.com/api/getmeterdetails/pending?${query.toString()}`,
   {
     method: "GET",
     headers: {
@@ -76,15 +76,7 @@ const res = await fetch(
   },
 );
 
-  const downloadButton = async () => {
-    const download = await fetch(`http://localhost:3000/api/download`, {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-      cache: "no-store",
-    });
-}
+
 
 const data = await res.json();
   

@@ -6,7 +6,7 @@ export default async function Page({ params }) {
   const token = cookieStore.get("token")?.value;
 
   const res = await fetch(
-    `http://localhost:3000/api/searchmeter?meterNumber=${paramss.meterNumber}`,
+    `https://assign-meter-backend.onrender.com/api/searchmeter?meterNumber=${paramss.meterNumber}`,
     {
       headers: {
         Authorization: `Bearer ${token}`,

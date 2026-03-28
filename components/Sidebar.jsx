@@ -1,6 +1,6 @@
 "use client";
 
-import { CardSim, Gauge, Lock, Option, PlugZap, Projector } from "lucide-react";
+import { CardSim, Gauge, Lock, Option, ParkingMeterIcon, PlugZap, Projector } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import React from "react";
@@ -10,11 +10,11 @@ const menuSections = [
     title: "Categories",
     items: [
       { name: "Meter", icon: Gauge, path: "/meter" },
-      { name: "CT", icon: PlugZap, path: "/ct" },
-      { name: "NIC", icon: Projector, path: "/nic" },
-      { name: "PT", icon: Option, path: "/pt" },
-      { name: "SIM", icon: CardSim, path: "/sim" },
-      { name: "SEAL", icon: Lock, path: "/seal" },
+      { name: "Current Transformers", icon: PlugZap, path: "/ct" },
+      { name: "Network Interface Card", icon: Projector, path: "/nic" },
+      { name: "Potential Transformers", icon: Option, path: "/pt" },
+      { name: "Subscriber Identity Module", icon: CardSim, path: "/sim" },
+      { name: "Seal", icon: Lock, path: "/seal" },
     ],
   },
   {
@@ -24,6 +24,11 @@ const menuSections = [
         name: "Create New User",
         icon: Gauge,
         path: "/workforce/create",
+      },
+      {
+        name: "Assign Meter",
+        icon: ParkingMeterIcon,
+        path: "/statusupdate",
       },
     ],
   },
@@ -35,7 +40,7 @@ const Sidebar = () => {
   const isActive = (path) => pathname === path;
 
   return (
-    <aside className="min-w-56 w-56 border-r p-4 sticky top-16 bg-[#F8FAFC] h-[calc(100vh-64px)] overflow-y-auto ">
+    <aside className="min-w-56 w-75 border-r p-4 sticky top-16 bg-[#F8FAFC] h-[calc(100vh-64px)] overflow-y-auto ">
       <nav className="relative h-full">
         <ul className="space-y-4 ">
           {menuSections.map((section) => (
@@ -52,7 +57,7 @@ const Sidebar = () => {
                     <li key={item.name}>
                       <Link
                         href={item.path}
-                        className={`flex items-center gap-2 text-sm p-2 rounded-lg transition-all border
+                        className={`flex items-center gap-2 text-sm p-2 rounded-lg transition-all border whitespace-nowrap
                           ${
                             isActive(item.path)
                               ? "bg-white  border-gray-200 font-bold text-gray-900"

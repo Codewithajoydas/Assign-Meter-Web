@@ -10,19 +10,22 @@ export default function WorkforceCreate() {
 //   const [pkg, setPkg] = useState("ASS1");
 
   const submitData = async () => {
-    const res = await fetch("http://localhost:3000/api/createuser", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
+    const res = await fetch(
+      "https://assign-meter-backend.onrender.com/api/createuser",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name,
+          email,
+          password,
+          isAdmin,
+        }),
+        credentials: "include",
       },
-      body: JSON.stringify({
-        name,
-        email,
-        password,
-        isAdmin,
-      }),
-      credentials: "include",
-    });
+    );
 
     const data = await res.json();
 

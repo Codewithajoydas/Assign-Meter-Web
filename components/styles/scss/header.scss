@@ -1,0 +1,8 @@
+.details {
+  display: none;
+}
+.profile:hover {
+  .details {
+    display: block;
+  }
+}

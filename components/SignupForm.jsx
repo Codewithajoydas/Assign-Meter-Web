@@ -11,21 +11,24 @@ export default function SignupForm() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch("http://localhost:3000/api/signin", {
-        method: "POST",
+      const res = await fetch(
+        "https://assign-meter-backend.onrender.com/api/signin",
+        {
+          method: "POST",
           headers: {
-          "Content-Type": "application/json"  
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email,
+            password,
+          }),
+          credentials: "include",
         },
-        body: JSON.stringify({
-          email,
-          password,
-        }),
-        credentials: "include",
-      });
+      );
         const data = await res.json();
         console.log(data)
       if (res.ok) {
-          console.log(data);
+          localStorage.setItem("user", JSON.stringify(data.data.user));
           router.replace("/")
         } else {
             console.log("response", res);
