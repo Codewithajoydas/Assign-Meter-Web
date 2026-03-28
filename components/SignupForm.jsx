@@ -29,7 +29,7 @@ export default function SignupForm() {
         console.log(data)
       if (res.ok) {
           localStorage.setItem("user", JSON.stringify(data.data.user));
-          router.push("/")
+         window.location.href = "/meter";
         } else {
             console.log("response", res);
         }
