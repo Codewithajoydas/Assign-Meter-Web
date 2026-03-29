@@ -3,7 +3,7 @@ import { Lock, Mail } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 export default function SignupForm() {
-    const router = useRouter();
+  const router = useRouter();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -11,33 +11,24 @@ export default function SignupForm() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch(
-        "https://assign-meter-backend.onrender.com/api/signin",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            email,
-            password,
-          }),
-          credentials: "include",
+      const res = await fetch("/api/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
         },
-      );
-        const data = await res.json();
-        console.log(data)
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await res.json();
       if (res.ok) {
-          localStorage.setItem("user", JSON.stringify(data.data.user));
-         window.location.href = "/meter";
-        } else {
-            console.log("response", res);
-        }
-        console.log(data);
+        router.push("/");
+      } else {
+        console.log("response", res);
+        alert("Login Faild!");
+      }
     } catch (error) {
       console.log("Something went wrong ", error);
+      alert("Login Faild!");
     }
-    console.log(email, password);
   };
   return (
     <div className="w-100 p-4  rounded shadow-md border-[.3px]">

@@ -1,6 +1,7 @@
 import Header from "@/components/Header";
 import { Mulish } from "next/font/google";
 import Sidebar from "@/components/Sidebar";
+import ProtectedRoute from "@/components/Protected";
 export const metadata = {
   title: "Assign Meter | Genus Power Infrastructure Ltd.",
   description: "This is a utily app for Genus Power Infrastructure for Meter Assignment",
