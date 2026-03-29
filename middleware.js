@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 export default function middleware(request) {
   const accsess_token = request.cookies.get("accsess_token")?.value;
   console.log("accsess_token", accsess_token);
+  console.log("request", request);
   const { pathname } = request.nextUrl;
 
   if (!accsess_token && pathname !== "/login") {
