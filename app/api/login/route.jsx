@@ -22,7 +22,7 @@ console.log(data)
 
   const response = NextResponse.json({ success: true });
 
-  response.cookies.set("token", data.data.token, {
+  response.cookies.set("accsess_token", data.data.token, {
     httpOnly: true,
     secure: true,
     sameSite: "lax", 
