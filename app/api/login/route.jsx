@@ -25,13 +25,13 @@ console.log(data)
   response.cookies.set("token", data.data.token, {
     httpOnly: true,
     secure: true,
-    sameSite: "lax", 
+    sameSite: "none", 
     path: "/",
   });
     response.cookies.set("user", data.data.user, {
       httpOnly: true,
       secure: true,
-      sameSite: "lax", 
+      sameSite: "none", 
       path: "/",
     });
 
