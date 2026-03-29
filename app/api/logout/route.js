@@ -5,7 +5,7 @@ export async function GET() {
     new URL("/login", "http://localhost:3001"),
   );
 
-  response.cookies.delete("token");
+  response.cookies.delete("accsess_token");
 
   return response;
 }

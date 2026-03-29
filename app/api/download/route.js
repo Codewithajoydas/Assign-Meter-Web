@@ -3,23 +3,22 @@ import { cookies } from "next/headers";
 export async function GET(req) {
   try {
     const cookieStore = await cookies();
-    const token = cookieStore.get("token")?.value;
-    if (!token) {
+    const accsess_token = cookieStore.get("accsess_token")?.value;
+    if (!accsess_token) {
       return new Response("Unauthorized", { status: 401 });
     }
-  const { searchParams } = new URL(req.url);
+    const { searchParams } = new URL(req.url);
 
-  const queryString = searchParams.toString();
+    const queryString = searchParams.toString();
 
-  const backendUrl = `https://assign-meter-backend.onrender.com/api/download${
-    queryString ? `?${queryString}` : ""
-  }`;
-      
+    const backendUrl = `https://assign-meter-backend.onrender.com/api/download${
+      queryString ? `?${queryString}` : ""
+    }`;
 
     const backendRes = await fetch(backendUrl, {
       method: "GET",
       headers: {
-        Authorization: `Bearer ${token}`,
+        Authorization: `Bearer ${accsess_token}`,
       },
     });
 
