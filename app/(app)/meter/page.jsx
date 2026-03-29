@@ -49,7 +49,7 @@ const limit = 100;
 
 const cookieStore = await cookies();
 const accsess_token = cookieStore.get("accsess_token")?.value;
-
+console.log("token", accsess_token)
 // Build query params properly
 const query = new URLSearchParams();
 
