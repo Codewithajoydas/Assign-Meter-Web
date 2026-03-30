@@ -81,7 +81,7 @@ if (installationType) query.set("installationType", installationType);
 if (status) query.set("status", status);
 
 const res = await fetch(
-  `http:localhost:3000/api/getmeterdetails?${query.toString()}`,
+  `https://assign-meter-backend.onrender.com/api/getmeterdetails?${query.toString()}`,
   {
     method: "GET",
     headers: {
