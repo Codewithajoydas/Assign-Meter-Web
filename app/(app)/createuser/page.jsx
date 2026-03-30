@@ -142,7 +142,7 @@ export default function WorkforceCreate() {
         {/* Button */}
         <button
           type="button"
-          className="mt-4 w-full bg-black text-white py-2 rounded-lg text-sm font-semibold hover:opacity-90 transition"
+          className="mt-4 w-full bg-black text-white py-2 rounded-lg text-sm font-semibold hover:opacity-90 transition disabled:cursor-not-allowed disabled:opacity-50"
           onClick={submitData}
           disabled={loading}
         >
