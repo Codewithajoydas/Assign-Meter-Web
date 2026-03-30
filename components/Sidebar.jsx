@@ -23,7 +23,7 @@ const menuSections = [
       {
         name: "Create New User",
         icon: Gauge,
-        path: "/workforce/create",
+        path: "/createuser",
       },
       {
         name: "Assign Meter",
