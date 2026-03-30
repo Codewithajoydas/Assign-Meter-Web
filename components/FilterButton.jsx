@@ -11,7 +11,8 @@ const isFilterApplied = params.get("startDate") ||
     params.get("agency") ||
     params.get("meterType") ||
     params.get("store") ||
-    params.get("installationType")
+    params.get("installationType") ||
+    params.get("status");
  
   const [active, setActive] = useState(false);
 
@@ -23,7 +24,7 @@ const isFilterApplied = params.get("startDate") ||
   const [installationType, setInstallationType] = useState(
     params.get("installationType") || "",
   );
-
+const [status, setStatus] = useState(params.get("status") || "");
   const applyFilter = () => {
     const newParams = new URLSearchParams(params.toString());
 
@@ -38,7 +39,7 @@ const isFilterApplied = params.get("startDate") ||
     setOrDelete("meterType", meterType);
     setOrDelete("store", store);
     setOrDelete("installationType", installationType);
-
+setOrDelete("status", status);
     router.push(`?${newParams.toString()}`);
     setActive(false);
   };
@@ -164,39 +165,71 @@ const isFilterApplied = params.get("startDate") ||
                   "Diag Engineering Pvt Ltd",
                   "CSC Computer",
                 ].map((agency) => {
-                  return <option value={agency==="All"?"":agency}>{agency}</option>;
+                  return (
+                    <option value={agency === "All" ? "" : agency}>
+                      {agency}
+                    </option>
+                  );
                 })}
               </select>
             </div>
-            <div className="selectMeterType grid grid-cols-1 gap-2 mt-3">
-              <label htmlFor="meterType" className="text-sm font-bold">
-                Meter Type
-              </label>
-              <select
-                name="meterType"
-                id="meterType"
-                className="p-2 rounded-lg border hover:bg-gray-100 text-sm"
-                onChange={(e) => setMeterType(e.target.value)}
-                value={meterType}
-              >
-                              {[
+            <div className="grid grid-cols-2 gap-2 mt-3">
+              <div className="selectMeterType grid grid-cols-1">
+                <label htmlFor="meterType" className="text-sm font-bold mb-2">
+                  Meter Type
+                </label>
+                <select
+                  name="meterType"
+                  id="meterType"
+                  className="p-2 rounded-lg border hover:bg-gray-100 text-sm"
+                  onChange={(e) => setMeterType(e.target.value)}
+                  value={meterType}
+                >
+                  {[
                     "All",
-                  "1P,2W,5-30A",
-                  "3P,4W,-/1A",
-                  "3P,4W,-/5A",
-                  "3P,4W,10-60A",
-                  "3P,4W,100/5A",
-                  "3P,4W,200/5A",
-                  "3P,4W,400/5A",
-                  "3P,4W,50/5A",
-                ].map((meterType) => {
-                  return <option value={meterType==="All"?"":meterType}>{meterType}</option>;
-                })}
-              </select>
+                    "1P,2W,5-30A",
+                    "3P,4W,-/1A",
+                    "3P,4W,-/5A",
+                    "3P,4W,10-60A",
+                    "3P,4W,100/5A",
+                    "3P,4W,200/5A",
+                    "3P,4W,400/5A",
+                    "3P,4W,50/5A",
+                  ].map((meterType) => {
+                    return (
+                      <option value={meterType === "All" ? "" : meterType}>
+                        {meterType}
+                      </option>
+                    );
+                  })}
+                </select>
+              </div>
+              <div className="status grid grid-cols-1">
+                <label htmlFor="status" className="text-sm font-bold mb-2">
+                  Status
+                </label>
+                <select
+                  name="status"
+                  id="status"
+                  className="p-2 rounded-lg border hover:bg-gray-100 text-sm"
+                  onChange={(e) => setStatus(e.target.value)}
+                  value={status}
+                >
+                  {["active", "pending", "installed", "rejected"].map(
+                    (status) => {
+                      return (
+                        <option value={status === "All" ? "" : status}>
+                          {status}
+                        </option>
+                      );
+                    },
+                  )}
+                </select>
+              </div>
             </div>
             <div className="grid grid-cols-2 mt-3 gap-2">
               <div className="store grid grid-cols-1">
-                <label htmlFor="" className="text-sm font-bold">
+                <label htmlFor="" className="text-sm font-bold mb-2">
                   Store
                 </label>
                 <select
@@ -212,7 +245,7 @@ const isFilterApplied = params.get("startDate") ||
                 </select>
               </div>
               <div className="installationType grid grid-cols-1">
-                <label htmlFor="" className="text-sm font-bold">
+                <label htmlFor="" className="text-sm font-bold mb-2">
                   Installation Type
                 </label>
                 <select
@@ -222,15 +255,24 @@ const isFilterApplied = params.get("startDate") ||
                   onChange={(e) => setInstallationType(e.target.value)}
                   value={installationType}
                 >
-                  {["All", "LTWC", "DTMeter", "FeederMeter", "HTCT", "LTCT"].map(
-                    (installationType) => {
-                      return (
-                        <option value={installationType==="All"?"":installationType}>
-                          {installationType}
-                        </option>
-                      );
-                    },
-                  )}
+                  {[
+                    "All",
+                    "LTWC",
+                    "DTMeter",
+                    "FeederMeter",
+                    "HTCT",
+                    "LTCT",
+                  ].map((installationType) => {
+                    return (
+                      <option
+                        value={
+                          installationType === "All" ? "" : installationType
+                        }
+                      >
+                        {installationType}
+                      </option>
+                    );
+                  })}
                 </select>
               </div>
             </div>

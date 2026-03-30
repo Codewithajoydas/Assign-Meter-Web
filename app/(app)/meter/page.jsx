@@ -36,37 +36,52 @@ const headers = [
   { label: "Status", icon: CheckCircle },
 ];
 
+const statusStyles = {
+  pending: { backgroundColor: "#ef4444", color: "#ffffff" }, // red
+  active: { backgroundColor: "#22c55e", color: "#fff" }, // green
+  rejected: { backgroundColor: "#6b7280", color: "#000000" }, // gray
+  installed: { backgroundColor: "#3b82f6", color: "#000000" }, // blue
+};
 export default async function Home({ searchParams }) {
 const search = (await searchParams) ?? {};
 
 const page = Number(search?.page ?? 1);
 const sort = search?.sort || "desc";
 
-const { startDate, endDate, agency, meterType, store, installationType } =
-  search;
-
 const limit = 100;
+const {
+  startDate,
+  endDate,
+  agency,
+  meterType,
+  store,
+  installationType,
+  status,
+} = search;
 
 const cookieStore = await cookies();
 const access_token = cookieStore.get("access_token")?.value;
-console.log("token", access_token);
-// Build query params properly
+
+if (!access_token) {
+  return <div className="p-10 text-red-500">Unauthorized</div>;
+}
+
 const query = new URLSearchParams();
 
 query.set("pageNumber", page);
-query.set("limit", limit);
+query.set("limit", 100);
 query.set("sort", sort);
 
-// Only include filters if they exist
 if (startDate) query.set("startDate", startDate);
 if (endDate) query.set("endDate", endDate);
 if (agency) query.set("agency", agency);
 if (meterType) query.set("meterType", meterType);
 if (store) query.set("store", store);
 if (installationType) query.set("installationType", installationType);
+if (status) query.set("status", status);
 
 const res = await fetch(
-  `https://assign-meter-backend.onrender.com/api/getmeterdetails/pending?${query.toString()}`,
+  `http:localhost:3000/api/getmeterdetails?${query.toString()}`,
   {
     method: "GET",
     headers: {
@@ -76,7 +91,9 @@ const res = await fetch(
   },
 );
 
-
+if (!res.ok) {
+  return <div className="p-10 text-red-500">Failed to fetch data</div>;
+}
 
 const data = await res.json();
   
@@ -120,7 +137,7 @@ const data = await res.json();
           {/* <button className=" cursor-pointer flex items-center gap-2 px-4 py-2 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-lg" onClick={downloadButton}>
             <DownloadIcon size={16} /> Export
           </button> */}
-          <DownloadButton/>
+          <DownloadButton />
         </div>
       </div>
       {/* TABLE */}
@@ -163,7 +180,18 @@ const data = await res.json();
                     </td>
                     <td>
                       <span
-                        className={` p-2 text-center capitalize rounded text-xs ${item.status === "pending" ? "bg-red-500 text-white" : ""}`}
+                        style={{
+                          padding: "6px 10px",
+                          textAlign: "center",
+                          textTransform: "capitalize",
+                          borderRadius: "4px",
+                          fontSize: "12px",
+                          display: "inline-block",
+                          ...(statusStyles[item.status] || {
+                            backgroundColor: "#e5e7eb",
+                            color: "#000",
+                          }),
+                        }}
                       >
                         {item.status}
                       </span>
