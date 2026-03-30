@@ -3,7 +3,6 @@
 import { CardSim, Gauge, Lock, Option, ParkingMeterIcon, PlugZap, Projector } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useRouter } from "next/router";
 import React from "react";
 
 const menuSections = [
@@ -37,7 +36,6 @@ const menuSections = [
 
 const Sidebar = () => {
   const pathname = usePathname();
-const router = useRouter()
   const isActive = (path) => pathname === path;
 
   return (
@@ -78,7 +76,7 @@ const router = useRouter()
           {/* Logout */}
         </ul>
         <li
-          onClick={()=>router.push("/api/logout")}
+          onClick={()=>window.location.assign("/api/logout")}
           className={`flex items-center gap-2 text-sm p-2 rounded-lg transition-all border absolute bottom-0 w-full hover:bg-red-300 hover:text-red-500 hover:font-bold`}
         >
           <Lock size={18} />
