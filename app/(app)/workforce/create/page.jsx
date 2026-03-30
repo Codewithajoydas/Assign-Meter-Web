@@ -11,7 +11,7 @@ export default function WorkforceCreate() {
 
   const submitData = async () => {
     const res = await fetch(
-      "https://assign-meter-backend.onrender.com/api/createuser",
+      "/api/createuser",
       {
         method: "POST",
         headers: {
@@ -23,7 +23,6 @@ export default function WorkforceCreate() {
           password,
           isAdmin,
         }),
-        credentials: "include",
       },
     );
 
