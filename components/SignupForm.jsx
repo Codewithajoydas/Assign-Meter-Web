@@ -7,10 +7,12 @@ export default function SignupForm() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      setLoading(true);
       const res = await fetch("/api/login", {
         method: "POST",
         headers: {
@@ -23,9 +25,11 @@ export default function SignupForm() {
         router.push("/");
       } else {
         console.log("response", res);
+        setLoading(false);
         alert("Login Faild!");
       }
     } catch (error) {
+      setLoading(false);
       console.log("Something went wrong ", error);
       alert("Login Faild!");
     }
@@ -62,8 +66,8 @@ export default function SignupForm() {
             onChange={(e) => setPassword(e.target.value)}
           />
         </label>
-        <button className="p-2 cursor-pointer rounded bg-black text-white w-full mt-2">
-          Sign In
+        <button className="p-2 cursor-pointer rounded bg-black text-white w-full mt-2 disabled:cursor-not-allowed disabled:opacity-50" disabled={loading} >
+          {loading ? "Submiting..." : "Sign In"}
         </button>
       </form>
     </div>

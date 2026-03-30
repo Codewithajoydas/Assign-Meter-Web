@@ -1,11 +1,9 @@
-// import { NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 
-// export async function GET() {
-//   const response = NextResponse.redirect(
-//     new URL("/login", "https://assign-meter-web.vercel.app"),
-//   );
+export async function GET(req) {
+  const response = NextResponse.redirect(new URL("/login", req.url));
 
-//   response.cookies.delete("accsess_token");
+  response.cookies.delete("access_token");
 
-//   return response;
-// }
+  return response;
+}

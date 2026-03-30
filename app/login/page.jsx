@@ -1,7 +1,7 @@
 import "../globals.css";
 import SignupForm from "@/components/SignupForm";
 export const metadata = {
-  title: "Sign Up | Assign Meter | Genus Power Infrastructure Ltd.",
+  title: "Sign In | Assign Meter | Genus Power Infrastructure Ltd.",
 };
 export default function LoginPage() {
   return (

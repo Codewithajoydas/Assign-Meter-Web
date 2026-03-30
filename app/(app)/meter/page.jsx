@@ -48,8 +48,8 @@ const { startDate, endDate, agency, meterType, store, installationType } =
 const limit = 100;
 
 const cookieStore = await cookies();
-const accsess_token = cookieStore.get("accsess_token")?.value;
-console.log("token", accsess_token)
+const access_token = cookieStore.get("access_token")?.value;
+console.log("token", access_token);
 // Build query params properly
 const query = new URLSearchParams();
 
@@ -70,7 +70,7 @@ const res = await fetch(
   {
     method: "GET",
     headers: {
-      Authorization: `Bearer ${accsess_token}`,
+      Authorization: `Bearer ${access_token}`,
     },
     cache: "no-store",
   },

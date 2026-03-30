@@ -22,10 +22,10 @@ console.log(data)
 
   const response = NextResponse.json({ success: true });
 
-  response.cookies.set("accsess_token", data.data.token, {
+  response.cookies.set("access_token", data.data.token, {
     httpOnly: true,
     secure: true,
-    sameSite: "lax", 
+    sameSite: "lax",
     path: "/",
   });
     response.cookies.set("user", JSON.stringify(data.data.user), {

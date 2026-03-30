@@ -1,16 +1,16 @@
 import { NextResponse } from "next/server";
 
 export default function middleware(request) {
-  const accsess_token = request.cookies.get("accsess_token")?.value;
-  console.log("accsess_token", accsess_token);
+  const access_token = request.cookies.get("access_token")?.value;
+  console.log("access_token", access_token);
   console.log("request", request);
   const { pathname } = request.nextUrl;
 
-  if (!accsess_token && pathname !== "/login") {
+  if (!access_token && pathname !== "/login") {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
-  if (accsess_token && pathname === "/login") {
+  if (access_token && pathname === "/login") {
     return NextResponse.redirect(new URL("/meter", request.url));
   }
 

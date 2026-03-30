@@ -3,13 +3,13 @@ import { cookies } from "next/headers";
 export default async function Page({ params }) {
   const cookieStore = await cookies();
   const paramss = await params;
-  const accsess_token = cookieStore.get("accsess_token")?.value;
+  const access_token = cookieStore.get("access_token")?.value;
 
   const res = await fetch(
     `https://assign-meter-backend.onrender.com/api/searchmeter?meterNumber=${paramss.meterNumber}`,
     {
       headers: {
-        Authorization: `Bearer ${accsess_token}`,
+        Authorization: `Bearer ${access_token}`,
       },
       cache: "no-store",
     },

@@ -12,7 +12,7 @@ export async function POST(req) {
   }
 
   const cookieStore = await cookies();
-  const token = cookieStore.get("accsess_token")?.value;
+  const token = cookieStore.get("access_token")?.value;
   console.log("The Token is ", token);
   if (!token) {
     return new Response(JSON.stringify({ error: "Unauthorized" }), {

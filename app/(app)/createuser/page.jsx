@@ -7,9 +7,11 @@ export default function WorkforceCreate() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isAdmin, setIsAdmin] = useState(false);
+  const [loading, setLoading]  = useState(false);
 //   const [pkg, setPkg] = useState("ASS1");
 
   const submitData = async () => {
+    setLoading(true);
     const res = await fetch(
       "/api/createuser",
       {
@@ -32,6 +34,7 @@ export default function WorkforceCreate() {
       alert("Id Created Successfully");
       console.log(data);
     } else {
+      setLoading(false);
       console.log(data);
       alert(data.message);
     }
@@ -141,8 +144,9 @@ export default function WorkforceCreate() {
           type="button"
           className="mt-4 w-full bg-black text-white py-2 rounded-lg text-sm font-semibold hover:opacity-90 transition"
           onClick={submitData}
+          disabled={loading}
         >
-          Create Workforce
+          {loading ? "Creating..." : "Create User"}
         </button>
       </div>
     </div>

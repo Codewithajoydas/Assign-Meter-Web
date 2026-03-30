@@ -3,8 +3,8 @@ import { cookies } from "next/headers";
 export async function GET(req) {
   try {
     const cookieStore = await cookies();
-    const accsess_token = cookieStore.get("accsess_token")?.value;
-    if (!accsess_token) {
+    const access_token = cookieStore.get("access_token")?.value;
+    if (!access_token) {
       return new Response("Unauthorized", { status: 401 });
     }
     const { searchParams } = new URL(req.url);
@@ -18,7 +18,7 @@ export async function GET(req) {
     const backendRes = await fetch(backendUrl, {
       method: "GET",
       headers: {
-        Authorization: `Bearer ${accsess_token}`,
+        Authorization: `Bearer ${access_token}`,
       },
     });
 
