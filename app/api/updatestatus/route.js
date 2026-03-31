@@ -23,7 +23,7 @@ export async function POST(req) {
     newFormData.append("file", file);
 
     // 4. Send to Express backend
-    const response = await fetch("http://localhost:3000/api/statusupdate", {
+    const response = await fetch("https://assign-meter-backend.onrender.com/api/statusupdate", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,
