@@ -76,19 +76,19 @@ export default function StatusUpdatePage() {
       const formData = new FormData();
       formData.append("file", file);
 
-      const res = await fetch(
-        "https://assign-meter-backend.onrender.com/api/statusupdate",
-        {
-          method: "POST",
-          body: formData,
-          credentials: "include",
-        },
-      );
+      const res = await fetch("api/updatestatus", {
+        method: "POST",
+        body: formData,
+      });
 
       const data = await res.json();
       console.log("Server response:", data);
 
-      alert("Upload successful");
+      if (res.ok) {
+        alert("Upload successful");
+      } else {
+        alert("Upload failed");
+      }
     } catch (err) {
       console.error(err);
       alert("Upload failed");

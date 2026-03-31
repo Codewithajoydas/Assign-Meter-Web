@@ -31,6 +31,7 @@ export default function WorkforceCreate() {
     const data = await res.json();
 
     if (res.ok) {
+      setLoading(false);
       alert("Id Created Successfully");
       console.log(data);
     } else {
