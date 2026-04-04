@@ -43,61 +43,66 @@ const statusStyles = {
   installed: { backgroundColor: "#3b82f6", color: "#000000" }, // blue
 };
 export default async function Home({ searchParams }) {
-const search = (await searchParams) ?? {};
+  const search = (await searchParams) ?? {};
 
-const page = Number(search?.page ?? 1);
-const sort = search?.sort || "desc";
+  const page = Number(search?.page ?? 1);
+  const sort = search?.sort || "desc";
 
-const limit = 100;
-const {
-  startDate,
-  endDate,
-  agency,
-  meterType,
-  store,
-  installationType,
-  status,
-} = search;
+  const limit = 100;
+  const {
+    startDate,
+    endDate,
+    agency,
+    meterType,
+    store,
+    installationType,
+    status,
+  } = search;
 
-const cookieStore = await cookies();
-const access_token = cookieStore.get("access_token")?.value;
+  const cookieStore = await cookies();
+  const access_token = cookieStore.get("access_token")?.value;
 
-if (!access_token) {
-  return <div className="p-10 text-red-500">Unauthorized</div>;
-}
+  if (!access_token) {
+    return <div className="p-10 text-red-500">Unauthorized</div>;
+  }
 
-const query = new URLSearchParams();
+  const query = new URLSearchParams();
 
-query.set("pageNumber", page);
-query.set("limit", 100);
-query.set("sort", sort);
+  query.set("pageNumber", page);
+  query.set("limit", 100);
+  query.set("sort", sort);
 
-if (startDate) query.set("startDate", startDate);
-if (endDate) query.set("endDate", endDate);
-if (agency) query.set("agency", agency);
-if (meterType) query.set("meterType", meterType);
-if (store) query.set("store", store);
-if (installationType) query.set("installationType", installationType);
-if (status) query.set("status", status);
+  if (startDate) query.set("startDate", startDate);
+  if (endDate) query.set("endDate", endDate);
+  if (agency) query.set("agency", agency);
+  if (meterType) query.set("meterType", meterType);
+  if (store) query.set("store", store);
+  if (installationType) query.set("installationType", installationType);
+  if (status) query.set("status", status);
 
-const res = await fetch(
-  `https://assign-meter-backend.onrender.com/api/getmeterdetails?${query.toString()}`,
-  {
-    method: "GET",
-    headers: {
-      Authorization: `Bearer ${access_token}`,
+  const res = await fetch(
+    `https://assign-meter-backend.onrender.com/api/getmeterdetails?${query.toString()}`,
+    {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${access_token}`,
+      },
+      cache: "no-store",
     },
-    cache: "no-store",
-  },
-);
+  );
 
-if (!res.ok) {
-  return <div className="p-10 text-red-500">Failed to fetch data</div>;
-}
+  if (!res.ok) {
+    return <div className="p-10 text-red-500">Failed to fetch data</div>;
+  }
 
-const data = await res.json();
-  
-  
+  const data = await res.json();
+
+  const createPageLink = (newPage) => {
+    const params = new URLSearchParams(search);
+    params.set("page", newPage);
+    return `?${params.toString()}`;
+  };
+
   const generatePages = (totalPages, currentPage, maxButtons = 3) => {
     let start = Math.max(1, currentPage - 1);
     let end = Math.min(totalPages, start + maxButtons - 1);
@@ -217,7 +222,7 @@ const data = await res.json();
 
         <div className="flex items-center gap-1 bg-white border rounded-lg shadow-sm overflow-hidden">
           {/* Prev */}
-          <Link href={`?page=${Math.max(1, page - 1)}`}>
+          <Link href={createPageLink(Math.max(1, page - 1))}>
             <button className="px-3 py-2 text-sm hover:bg-gray-100 cursor-pointer">
               Prev
             </button>
@@ -225,7 +230,7 @@ const data = await res.json();
 
           {/* Numbers */}
           {pages.map((num) => (
-            <Link key={num} href={`?page=${num}`}>
+            <Link key={num} href={createPageLink(num)}>
               <button
                 className={`px-3 py-2 text-sm cursor-pointer ${
                   num === page ? "bg-blue-600 text-white" : "hover:bg-gray-100"
@@ -237,7 +242,7 @@ const data = await res.json();
           ))}
 
           {/* Next */}
-          <Link href={`?page=${Math.min(data.totalPages, page + 1)}`}>
+          <Link href={createPageLink(Math.min(data.totalPages, page + 1))}>
             <button className="px-3 py-2 text-sm hover:bg-gray-100 cursor-pointer">
               Next
             </button>
