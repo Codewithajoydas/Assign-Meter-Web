@@ -11,8 +11,8 @@ export default function DownloadButton() {
   const agency = searchParams.get("agency");
   const meterType = searchParams.get("meterType");
   const store = searchParams.get("store");
-    const installationType = searchParams.get("installationType");
-    
+  const installationType = searchParams.get("installationType");
+  const status = searchParams.get("status");
   // Build query string
   const query = new URLSearchParams({
     startDate: startDate || "",
@@ -21,6 +21,7 @@ export default function DownloadButton() {
     meterType: meterType || "",
     store: store || "",
     installationType: installationType || "",
+    status: status || "",
   }).toString();
 
   return (

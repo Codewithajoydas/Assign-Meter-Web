@@ -1,9 +1,19 @@
 "use client";
 
-import { CardSim, Gauge, Lock, Option, ParkingMeterIcon, PlugZap, Projector } from "lucide-react";
+import { SidebarContext } from "@/contexts/Sidebar.context";
+import {
+  CardSim,
+  Gauge,
+  Lock,
+  Option,
+  ParkingMeterIcon,
+  PlugZap,
+  Projector,
+  SidebarIcon,
+} from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import React from "react";
+import React, { useContext, useState } from "react";
 
 const menuSections = [
   {
@@ -35,18 +45,21 @@ const menuSections = [
 ];
 
 const Sidebar = () => {
+  const { closed, setClosed } = useContext(SidebarContext);
   const pathname = usePathname();
   const isActive = (path) => pathname === path;
-
   return (
-    <aside className="min-w-56 w-75 border-r p-4 sticky top-16 bg-[#F8FAFC] h-[calc(100vh-64px)] overflow-y-auto ">
+    <aside
+      className={`transition-all duration-300 border-r p-4 sticky top-16 bg-[#F8FAFC] h-[calc(100vh-64px)] overflow-y-auto w-62.5 hidden`}
+      style={{ width: closed ? "0" : "250px", padding: closed ? "0" : "10px" }}
+    >
       <nav className="relative h-full">
         <ul className="space-y-4 ">
           {menuSections.map((section) => (
             <li key={section.title}>
-              <p className="font-semibold text-xs text-gray-500 mb-2">
+              <span className="font-semibold text-xs text-gray-500 mb-2 flex justify-between">
                 {section.title}
-              </p>
+              </span>
 
               <ul className="space-y-1">
                 {section.items.map((item) => {
@@ -76,7 +89,7 @@ const Sidebar = () => {
           {/* Logout */}
         </ul>
         <li
-          onClick={()=>window.location.assign("/api/logout")}
+          onClick={() => window.location.assign("/api/logout")}
           className={`flex items-center gap-2 text-sm p-2 rounded-lg transition-all border absolute bottom-0 w-full hover:bg-red-300 hover:text-red-500 hover:font-bold cursor-pointer`}
         >
           <Lock size={18} />

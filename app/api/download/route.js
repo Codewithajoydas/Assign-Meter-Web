@@ -10,7 +10,7 @@ export async function GET(req) {
     const { searchParams } = new URL(req.url);
 
     const queryString = searchParams.toString();
-
+    console.log("FINAL URL:", queryString.toString());
     const backendUrl = `https://assign-meter-backend.onrender.com/api/download${
       queryString ? `?${queryString}` : ""
     }`;

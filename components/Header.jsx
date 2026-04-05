@@ -1,36 +1,46 @@
 "use client";
 import { useRouter } from "next/navigation";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "./ui/input-group";
-import { SearchIcon, Settings, User } from "lucide-react";
-import { useEffect, useState } from "react";
+import { Menu, SearchIcon, Settings, Sidebar, User } from "lucide-react";
+import { useContext, useEffect, useState } from "react";
 import "./styles/css/header.css";
+import { SidebarContext } from "@/contexts/Sidebar.context";
 const Header = () => {
+  const { closed, setClosed } = useContext(SidebarContext);
   const router = useRouter();
   const [search, setSearch] = useState("");
-  const [userName, setUserName] = useState("")
+  const [userName, setUserName] = useState("");
   const [email, setEmail] = useState("");
-useEffect(() => {
-  const user = localStorage.getItem("user");
+  useEffect(() => {
+    const user = localStorage.getItem("user");
 
-  if (user) {
-    const parsedUser = JSON.parse(user);
-    setUserName(parsedUser.name);
-    setEmail(parsedUser.email);
-  }
-}, []);
+    if (user) {
+      const parsedUser = JSON.parse(user);
+      setUserName(parsedUser.name);
+      setEmail(parsedUser.email);
+    }
+  }, []);
   const submitSearch = () => {
     if (!search) return;
     router.push(`/meter/${search}`);
   };
   return (
-    <header className="sticky top-0 z-10  border-b bg-[#F8FAFC] px-6 py-3 flex items-center justify-between">
-      <div className="logo flex items-center gap-1">
-        <img
-          src="/icon.png"
-          alt=""
-          style={{ width: 40, height: 40, borderRadius: 100 }}
-        />
-        <span className="font-bold">Assign Meter</span>
+    <header className="sticky top-0 z-10  border-b bg-[#F8FAFC] px-2 py-3 flex items-center justify-between">
+      <div className="flex items-center gap-2 w-300">
+        <span
+          className="w-10 h-10 rounded-full flex justify-center items-center hover:bg-gray-200 cursor-pointer"
+          onClick={() => setClosed(!closed)}
+        >
+          <Menu size={18} />
+        </span>
+        <div className="logo flex items-center gap-1">
+          <img
+            src="/icon.png"
+            alt=""
+            style={{ width: 40, height: 40, borderRadius: 100 }}
+          />
+          <span className="font-bold">Assign Meter</span>
+        </div>
       </div>
       <search className="flex items-center gap-2">
         <label
@@ -56,7 +66,10 @@ useEffect(() => {
         </button>
       </search>
       <span className="flex items-center gap-7 relative">
-        <span className="flex w-10 h-10 circle hover:bg-gray-200 justify-center items-center rounded-full cursor-pointer transition" onClick={() => router.push("/settings")}>
+        <span
+          className="flex w-10 h-10 circle hover:bg-gray-200 justify-center items-center rounded-full cursor-pointer transition"
+          onClick={() => router.push("/settings")}
+        >
           <Settings size={20} />
         </span>
         <span className="profile">

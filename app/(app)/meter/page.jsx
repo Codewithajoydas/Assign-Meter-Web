@@ -32,6 +32,7 @@ const headers = [
   { label: "Installation", icon: Wrench },
   { label: "Store", icon: MapPin },
   { label: "Agency", icon: Building2 },
+  {label:"Supervisor", icon: User},
   { label: "Installer ID", icon: User },
   { label: "Status", icon: CheckCircle },
 ];
@@ -96,7 +97,7 @@ export default async function Home({ searchParams }) {
   }
 
   const data = await res.json();
-
+  
   const createPageLink = (newPage) => {
     const params = new URLSearchParams(search);
     params.set("page", newPage);
@@ -175,11 +176,12 @@ export default async function Home({ searchParams }) {
                     <td className="px-4 py-3">
                       {new Date(item.createdAt).toLocaleDateString()}
                     </td>
-                    <td className="px-4 py-3 font-bold">{item.meterNumber}</td>
+                    <td className="px-4 py-3 font-bold"><Link href={`/meter/${item.meterNumber}`}>{item.meterNumber}</Link></td>
                     <td className="px-4 py-3">{item.meterType}</td>
                     <td className="px-4 py-3">{item.installationType}</td>
                     <td className="px-4 py-3">{item.storeLocation}</td>
-                    <td className="px-4 py-3">{item.agency}</td>
+                    <td className="px-4 py-3">{item?.agency}</td>
+                    <td className="px-4 py-3">{item?.supervisor?.name ?? "No Supervisor"}</td>
                     <td className="px-4 py-3 text-blue-600 font-medium">
                       {item.installerId}
                     </td>

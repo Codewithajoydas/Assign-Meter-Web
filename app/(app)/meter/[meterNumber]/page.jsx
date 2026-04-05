@@ -1,3 +1,4 @@
+import getInstallerName from "@/lib/getInstallerName";
 import { cookies } from "next/headers";
 
 export default async function Page({ params }) {
@@ -17,6 +18,9 @@ export default async function Page({ params }) {
 
   const data = await res.json();
   const meter = data.data?.meters;
+
+  const installerName = await getInstallerName(meter?.installerId);
+  console.log(installerName);
 
   if (!meter) {
     return (
@@ -53,6 +57,7 @@ export default async function Page({ params }) {
             <Info label="Location" value={meter.storeLocation} />
             <Info label="Agency" value={meter.agency} />
             <Info label="Installer ID" value={meter.installerId} />
+            <Info label="Installer Name" value={installerName} />
           </Section>
 
 
