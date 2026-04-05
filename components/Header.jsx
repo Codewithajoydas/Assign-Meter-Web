@@ -26,7 +26,7 @@ const Header = () => {
   };
   return (
     <header className="sticky top-0 z-10  border-b bg-[#F8FAFC] px-2 py-3 flex items-center justify-between">
-      <div className="flex items-center gap-2 w-300">
+      <div className="flex items-center gap-2">
         <span
           className="w-10 h-10 rounded-full flex justify-center items-center hover:bg-gray-200 cursor-pointer"
           onClick={() => setClosed(!closed)}
