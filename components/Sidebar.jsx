@@ -51,7 +51,7 @@ const Sidebar = () => {
   return (
     <aside
       className={`transition-all duration-300 border-r p-4 sticky top-16 bg-[#F8FAFC] h-[calc(100vh-64px)] overflow-y-auto w-62.5`}
-      style={{ width: closed ? "0" : "250px", padding: closed ? "0" : "10px", overflow: closed ? "hidden" : "auto" }}
+      style={{ width: closed ? "0" : "250px", padding: closed ? "0" : "10px", overflow: closed ? "hidden" : "auto", minWidth: closed ? "0" : "250px" }}
     >
       <nav className="relative h-full">
         <ul className="space-y-4 ">
