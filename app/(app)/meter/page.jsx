@@ -88,7 +88,6 @@ export default async function Home({ searchParams }) {
       headers: {
         Authorization: `Bearer ${access_token}`,
       },
-      cache: "no-store",
     },
   );
 
