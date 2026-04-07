@@ -43,7 +43,7 @@ export default function FilterButton() {
     setOrDelete("store", store);
     setOrDelete("installationType", installationType);
     setOrDelete("status", status);
-    startTransition(() => router.push(`?${newParams.toString()}`));
+    startTransition(() => router.replace(`?${newParams.toString()}`));
     setActive(false);
   };
   const clearFilter = () => {
