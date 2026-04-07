@@ -175,13 +175,19 @@ export default async function Home({ searchParams }) {
                     <td className="px-4 py-3">
                       {new Date(item.createdAt).toLocaleDateString()}
                     </td>
-                    <td className="px-4 py-3 font-bold"><Link href={`/meter/${item.meterNumber}`}>{item.meterNumber}</Link></td>
+                    <td className="px-4 py-3 font-bold max-w-[140px] truncate whitespace-nowrap">
+                      <Link href={`/meter/${item.meterNumber}`}>
+                        {item.meterNumber}
+                      </Link>
+                    </td>
                     <td className="px-4 py-3">{item.meterType}</td>
                     <td className="px-4 py-3">{item.installationType}</td>
                     <td className="px-4 py-3">{item.storeLocation}</td>
                     <td className="px-4 py-3">{item?.agency}</td>
-                    <td className="px-4 py-3">{item?.supervisor?.name ?? "No Supervisor"}</td>
-                    <td className="px-4 py-3 text-blue-600 font-medium">
+                    <td className="px-4 py-3">
+                      {item?.supervisor?.name ?? "No Supervisor"}
+                    </td>
+                    <td className="px-4 py-3 text-blue-600 font-medium max-w-[140px] truncate whitespace-nowrap">
                       {item.installerId}
                     </td>
                     <td>
