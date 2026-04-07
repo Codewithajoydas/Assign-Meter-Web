@@ -229,7 +229,7 @@ export default async function Home({ searchParams }) {
 
         <div className="flex items-center gap-1 bg-white border rounded-lg shadow-sm overflow-hidden">
           {/* Prev */}
-          <Link href={createPageLink(Math.max(1, page - 1))}>
+          <Link href={createPageLink(Math.max(1, page - 1))} prefetch>
             <button className="px-3 py-2 text-sm hover:bg-gray-100 cursor-pointer">
               Prev
             </button>
@@ -237,7 +237,7 @@ export default async function Home({ searchParams }) {
 
           {/* Numbers */}
           {pages.map((num) => (
-            <Link key={num} href={createPageLink(num)}>
+            <Link key={num} href={createPageLink(num)} prefetch>
               <button
                 className={`px-3 py-2 text-sm cursor-pointer ${
                   num === page ? "bg-blue-600 text-white" : "hover:bg-gray-100"
@@ -249,7 +249,7 @@ export default async function Home({ searchParams }) {
           ))}
 
           {/* Next */}
-          <Link href={createPageLink(Math.min(data.totalPages, page + 1))}>
+          <Link href={createPageLink(Math.min(data.totalPages, page + 1))} prefetch>
             <button className="px-3 py-2 text-sm hover:bg-gray-100 cursor-pointer">
               Next
             </button>

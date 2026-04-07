@@ -1,19 +1,22 @@
 "use client";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Filter, X } from "lucide-react";
-import { useState } from "react";
+import { useState, useTransition } from "react";
 
 export default function FilterButton() {
   const router = useRouter();
   const params = useSearchParams();
-const isFilterApplied = params.get("startDate") ||
+  const [isPending, startTransition] = useTransition();
+
+  const isFilterApplied =
+    params.get("startDate") ||
     params.get("endDate") ||
     params.get("agency") ||
     params.get("meterType") ||
     params.get("store") ||
     params.get("installationType") ||
     params.get("status");
- 
+
   const [active, setActive] = useState(false);
 
   const [startDate, setStartDate] = useState(params.get("startDate") || "");
@@ -24,7 +27,7 @@ const isFilterApplied = params.get("startDate") ||
   const [installationType, setInstallationType] = useState(
     params.get("installationType") || "",
   );
-const [status, setStatus] = useState(params.get("status") || "");
+  const [status, setStatus] = useState(params.get("status") || "");
   const applyFilter = () => {
     const newParams = new URLSearchParams(params.toString());
 
@@ -39,8 +42,8 @@ const [status, setStatus] = useState(params.get("status") || "");
     setOrDelete("meterType", meterType);
     setOrDelete("store", store);
     setOrDelete("installationType", installationType);
-setOrDelete("status", status);
-    router.push(`?${newParams.toString()}`);
+    setOrDelete("status", status);
+    startTransition(() => router.push(`?${newParams.toString()}`));
     setActive(false);
   };
   const clearFilter = () => {
@@ -279,9 +282,10 @@ setOrDelete("status", status);
             <div className="flex gap-2 mt-4">
               <button
                 onClick={applyFilter}
+                disabled={isPending}
                 className="w-full p-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700"
               >
-                Apply
+                {isPending ? "Applying..." : "Apply"}
               </button>
 
               <button
