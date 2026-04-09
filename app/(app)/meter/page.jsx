@@ -1,5 +1,5 @@
 import RefreshButton from "@/components/RefreshButton";
-import { DownloadIcon, Filter } from "lucide-react";
+import { Download, DownloadIcon, Filter } from "lucide-react";
 import { cookies } from "next/headers";
 import Link from "next/link";
 import {
@@ -16,6 +16,7 @@ import {
 import FilterButton from "@/components/FilterButton";
 import SortButton from "@/components/SortButton";
 import DownloadButton from "@/components/Download";
+import { DownloadAll } from "@/components/DownloadAll";
 export const dynamic = "force-dynamic";
 
 export const metadata = {
@@ -32,7 +33,7 @@ const headers = [
   { label: "Installation", icon: Wrench },
   { label: "Store", icon: MapPin },
   { label: "Agency", icon: Building2 },
-  {label:"Supervisor", icon: User},
+  { label: "Supervisor", icon: User },
   { label: "Installer ID", icon: User },
   { label: "Status", icon: CheckCircle },
 ];
@@ -96,7 +97,7 @@ export default async function Home({ searchParams }) {
   }
 
   const data = await res.json();
-  
+
   const createPageLink = (newPage) => {
     const params = new URLSearchParams(search);
     params.set("page", newPage);
@@ -223,9 +224,12 @@ export default async function Home({ searchParams }) {
       </div>
       {/* FOOTER */}
       <div className="flex justify-between items-center mt-4">
-        <p className="text-sm text-gray-500">
-          Showing {data?.totalData || 0} entries
-        </p>
+        <div className="flex items-center gap-2">
+          <p className="text-sm text-gray-500">
+            Showing {data?.totalData || 0} entries
+          </p>
+          <DownloadAll count={data?.totalData || 0} />
+        </div>
 
         <div className="flex items-center gap-1 bg-white border rounded-lg shadow-sm overflow-hidden">
           {/* Prev */}
@@ -249,7 +253,10 @@ export default async function Home({ searchParams }) {
           ))}
 
           {/* Next */}
-          <Link href={createPageLink(Math.min(data.totalPages, page + 1))} prefetch>
+          <Link
+            href={createPageLink(Math.min(data.totalPages, page + 1))}
+            prefetch
+          >
             <button className="px-3 py-2 text-sm hover:bg-gray-100 cursor-pointer">
               Next
             </button>

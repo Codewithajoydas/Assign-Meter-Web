@@ -12,13 +12,13 @@ const Header = () => {
   const [userName, setUserName] = useState("");
   const [email, setEmail] = useState("");
   useEffect(() => {
-    const user = localStorage.getItem("user");
+    (async function () {
+      const res = await fetch("/api/getuserdetails");
+      const data = await res.json();
+      setUserName(data.userData.name);
+      setEmail(data.userData.email);
+    })()
 
-    if (user) {
-      const parsedUser = JSON.parse(user);
-      setUserName(parsedUser.name);
-      setEmail(parsedUser.email);
-    }
   }, []);
   const submitSearch = () => {
     if (!search) return;
@@ -78,8 +78,9 @@ const Header = () => {
           </span>
           <div
             className="details absolute  bg-white p-2 text-sm whitespace-nowrap shadow-2xl rounded-lg border"
-            style={{ bottom: -60, right: 10 }}
+            style={{ bottom: -80, right: 10 }}
           >
+            <p style={{paddingBottom:10, fontSize:"small", color:"gray"}}>Loged In User Details</p>
             <span className="font-bold">Name</span>:{" "}
             {userName || "not logged in"} <br />
             <span className="font-bold">Email</span>: {email || "not logged in"}
