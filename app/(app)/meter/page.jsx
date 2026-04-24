@@ -17,7 +17,6 @@ import FilterButton from "@/components/FilterButton";
 import SortButton from "@/components/SortButton";
 import DownloadButton from "@/components/Download";
 import { DownloadAll } from "@/components/DownloadAll";
-export const dynamic = "force-dynamic";
 
 export const metadata = {
   title: "Meter Issue | Assign Meter",
@@ -82,6 +81,7 @@ export default async function Home({ searchParams }) {
   if (installationType) query.set("installationType", installationType);
   if (status) query.set("status", status);
 
+  
   const res = await fetch(
     `https://assign-meter-backend.onrender.com/api/getmeterdetails?${query.toString()}`,
     {
@@ -89,6 +89,7 @@ export default async function Home({ searchParams }) {
       headers: {
         Authorization: `Bearer ${access_token}`,
       },
+      cache: "no-cache",
     },
   );
 

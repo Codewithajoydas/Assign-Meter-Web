@@ -165,6 +165,14 @@ export default function StatusUpdatePage() {
         >
           {loading ? "Uploading..." : "Upload to Server"}
         </button>
+        <a
+          href="/Meter-Assign-Template.xlsx"
+          download={"meter-assign-template.xls"}
+        >
+          <button className="text-sm text-gray-500 hover:underline">
+            Download Template
+          </button>
+        </a>
       </div>
     </div>
   );

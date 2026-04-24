@@ -1,18 +1,29 @@
-'use client'
-import { RefreshCw } from "lucide-react";
+"use client";
+
+import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { RefreshCwIcon } from "lucide-react";
 
 export default function RefreshButton() {
-    const router = useRouter();
-    return (
-      <div
-        className="cursor-pointer flex items-center gap-2 px-3 py-2 text-sm border rounded-lg hover:bg-gray-100 transition"
-        title="Refresh"
-        role="button"
-            aria-label="Refresh"
-            onClick={()=>router.refresh()}
-      >
-        <RefreshCw size={16} /> Refresh 
-      </div>
-    );
+  const router = useRouter();
+  const [pending, startTransition] = useTransition();
+  const [refreshing, setRefreshing] = useState(false);
+  useEffect(() => {
+    if (refreshing) {
+      startTransition(() => {
+        router.refresh();
+      });
+      setRefreshing(false);
+    }
+  }, [])
+  return (
+    <button
+      onClick={() => {
+        setRefreshing(true);
+      }}
+      disabled={pending}
+      className="flex justify-center items-center gap-2 hover:bg-gray-100 px-4 py-2 rounded-lg border text-sm cursor-pointer">
+      {pending ? "Refreshing..." : ` Refresh`} <RefreshCwIcon size={16} />
+    </button>
+  );
 }

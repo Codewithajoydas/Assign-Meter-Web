@@ -1,7 +1,17 @@
-export default function LoadingPage() {
+export default function Loading() {
   return (
-    <div className="flex h-screen items-center justify-center">
-      <div className="animate-spin h-10 w-10 border-b-2 border-t-transparent border-blue-500 rounded-full"></div>
+    <div
+      // style={{
+      //   padding: 20,
+      //   fontSize: 20,
+      //   fontWeight: "bold",
+      //   display: "flex",
+      //   justifyContent: "center",
+      //   alignItems: "center",
+      // }}
+      className="h-full w-full flex justify-center items-center font-vold"
+    >
+      Loading data...
     </div>
   );
 }
