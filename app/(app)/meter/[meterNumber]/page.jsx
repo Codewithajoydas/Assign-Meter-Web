@@ -60,7 +60,6 @@ export default async function Page({ params }) {
             <Info label="Installer Name" value={installerName} />
           </Section>
 
-
           <Section title="Supervisor">
             <Info label="Name" value={meter.supervisor?.name} />
             <Info label="Email" value={meter.supervisor?.email} />
@@ -78,13 +77,17 @@ export default async function Page({ params }) {
             <span>
               Created:{" "}
               <span className="text-gray-800 font-medium">
-                {new Date(meter.createdAt).toLocaleString()}
+                {new Date(meter.createdAt).toLocaleString("en-IN", {
+                  timeZone: "Asia/Kolkata",
+                })}
               </span>
             </span>
             <span>
               Updated:{" "}
               <span className="text-gray-800 font-medium">
-                {new Date(meter.updatedAt).toLocaleString()}
+                {new Date(meter.updatedAt).toLocaleString("en-IN", {
+                  timeZone: "Asia/Kolkata",
+                })}
               </span>
             </span>
           </div>
