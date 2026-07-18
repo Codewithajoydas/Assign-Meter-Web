@@ -1,7 +1,7 @@
 "use client";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Filter, X } from "lucide-react";
-import { useState, useTransition } from "react";
+import { Filter, Loader, Loader2, X } from "lucide-react";
+import { useEffect, useState, useTransition } from "react";
 
 export default function FilterButton() {
   const router = useRouter();
@@ -44,8 +44,11 @@ export default function FilterButton() {
     setOrDelete("installationType", installationType);
     setOrDelete("status", status);
     startTransition(() => router.replace(`?${newParams.toString()}`));
-    setActive(false);
   };
+
+  useEffect(() => {
+    setActive(false);
+  }, [params]);
   const clearFilter = () => {
     router.push("?");
     setActive(false);
@@ -283,9 +286,15 @@ export default function FilterButton() {
               <button
                 onClick={applyFilter}
                 disabled={isPending}
-                className="w-full p-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700"
+                className="w-full p-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700 flex justify-center items-center disabled:bg-gray-400 disabled:cursor-not-allowed"
               >
-                {isPending ? "Applying..." : "Apply"}
+                {isPending ? (
+                  <span className="flex items-center gap-2">
+                    <Loader2 className="animate-spin" size={18}/> Applying
+                  </span>
+                ) : (
+                  "Apply"
+                )}
               </button>
 
               <button
