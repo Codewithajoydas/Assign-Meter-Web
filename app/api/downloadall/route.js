@@ -17,6 +17,7 @@ export async function GET() {
       cache: "no-store",
     }
   );
+  console.log("The response is ", backendRes);
 
   if (!backendRes.ok) {
     return new Response(await backendRes.text(), {

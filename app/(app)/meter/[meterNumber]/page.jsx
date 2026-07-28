@@ -58,6 +58,7 @@ export default async function Page({ params }) {
             <Info label="Agency" value={meter.agency} />
             <Info label="Installer ID" value={meter.installerId} />
             <Info label="Installer Name" value={installerName} />
+            <Info label="Remarks" value={ meter.remarks} />
           </Section>
 
           <Section title="Supervisor">
