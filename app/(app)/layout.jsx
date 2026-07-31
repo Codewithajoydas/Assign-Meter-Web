@@ -1,5 +1,7 @@
 import Header from "@/components/Header";
 import { Mulish } from "next/font/google";
+
+import "leaflet/dist/leaflet.css";
 import Sidebar from "@/components/Sidebar";
 import { SidebarProvider } from "@/contexts/Sidebar.context"; 
 import ProtectedRoute from "@/components/Protected";
