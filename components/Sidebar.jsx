@@ -2,6 +2,7 @@
 
 import { SidebarContext } from "@/contexts/Sidebar.context";
 import {
+  Bluetooth,
   CardSim,
   Gauge,
   Lock,
@@ -25,6 +26,7 @@ const menuSections = [
       { name: "Potential Transformers", icon: Option, path: "/pt" },
       { name: "Subscriber Identity Module", icon: CardSim, path: "/sim" },
       { name: "Seal", icon: Lock, path: "/seal" },
+      { name: "BLE Devices", icon: Bluetooth, path: "/bledevices" },
     ],
   },
   {
@@ -50,7 +52,7 @@ const Sidebar = () => {
   const isActive = (path) => pathname === path;
   return (
     <aside
-      className={`transition-all duration-300 border-r p-4 sticky top-16 bg-[#F8FAFC] h-[calc(100vh-64px)] overflow-y-auto w-62.5`}
+      className={`transition-all duration-300 border-r p-4 fixed top-16 bg-[#F8FAFC] h-[calc(100vh-64px)] overflow-y-auto w-62.5 `}
       style={{ width: closed ? "0" : "250px", padding: closed ? "0" : "10px", overflow: closed ? "hidden" : "auto", minWidth: closed ? "0" : "250px" }}
     >
       <nav className="relative h-full">

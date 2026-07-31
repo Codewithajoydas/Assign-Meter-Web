@@ -21,7 +21,7 @@ export default function Layout({ children }) {
         <Header />
         <div className="flex justify-between">
           <Sidebar />
-          <main className="p-2 flex-1 w-full">{children}</main>
+          <main className="p-2 flex-1 w-full ml-[250px]">{children}</main>
         </div>
       </div>
     </SidebarProvider>
