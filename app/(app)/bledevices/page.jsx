@@ -4,7 +4,7 @@ import TemButton from "@/components/TemButton";
 
 // TODO: move to an env var (e.g. process.env.BACKEND_URL) so dev/staging/prod
 // don't require editing this file each time.
-const BACKEND_URL = "http://localhost:9000/api/bledevices";
+const BACKEND_URL = "https://assign-meter-backend.onrender.com/api/bledevices";
 
 export default async function Page({ params }) {
   const cookieStore = await cookies();
