@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import {
@@ -41,7 +41,7 @@ const statusStyles = {
 };
 
 const SSE_URL =
-  process.env.NEXT_PUBLIC_SSE_URL || "http://localhost:9000/events";
+  process.env.NEXT_PUBLIC_SSE_URL || "https://assign-meter-backend.onrender.com/events";
 const LIMIT = 100;
 
 export default function Home() {
@@ -62,6 +62,13 @@ export default function Home() {
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  // Keep a live ref of `page` so the SSE handler always reads the
+  // current page without forcing the EventSource to reconnect.
+  const pageRef = useRef(page);
+  useEffect(() => {
+    pageRef.current = page;
+  }, [page]);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -104,7 +111,6 @@ export default function Home() {
     } finally {
       setLoading(false);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     page,
     sort,
@@ -121,28 +127,39 @@ export default function Home() {
     fetchData();
   }, [fetchData]);
 
+  // ================= SSE (live updates) =================
+  // Connects once on mount. Uses `pageRef` instead of `page` as a
+  // dependency so navigating pages doesn't tear down/recreate the stream.
   useEffect(() => {
-    const eventSource = new EventSource(SSE_URL);
+    const eventSource = new EventSource(SSE_URL, { withCredentials: true });
 
     eventSource.addEventListener("meter-added", (event) => {
-      let newMeter;
+      let payload;
       try {
-        newMeter = JSON.parse(event.data);
+        payload = JSON.parse(event.data);
       } catch (err) {
         console.error("Failed to parse SSE payload:", err);
         return;
       }
 
+      // Backend broadcasts a batch: { insertedCount, meters: [...] }
+      const newMeters = Array.isArray(payload?.meters) ? payload.meters : [];
+      if (!newMeters.length) return;
+
+      console.log("New meters added via SSE:", newMeters);
+
       setRows((prev) => {
-        if (prev.some((m) => m._id === newMeter._id)) return prev;
-        if (page === 1) {
-          const next = [newMeter, ...prev];
-          return next.length > LIMIT ? next.slice(0, LIMIT) : next;
-        }
-        return prev;
+        if (pageRef.current !== 1) return prev;
+
+        const existingIds = new Set(prev.map((m) => m._id));
+        const toAdd = newMeters.filter((m) => !existingIds.has(m._id));
+        if (!toAdd.length) return prev;
+
+        const next = [...toAdd, ...prev];
+        return next.length > LIMIT ? next.slice(0, LIMIT) : next;
       });
 
-      setTotal((prev) => prev + 1);
+      setTotal((prev) => prev + (payload?.insertedCount ?? newMeters.length));
     });
 
     eventSource.onerror = (err) => {
@@ -152,7 +169,7 @@ export default function Home() {
     return () => {
       eventSource.close();
     };
-  }, [page]);
+  }, []); // mount once, not tied to `page`
 
   const createPageLink = (newPage) => {
     const params = new URLSearchParams(Array.from(searchParams.entries()));

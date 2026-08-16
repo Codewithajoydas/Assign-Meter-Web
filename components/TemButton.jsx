@@ -4,7 +4,7 @@ import React, { memo } from "react";
 
 const TemButton = memo(() => {
   const handleDownload = () => {
-    window.location.assign("http://localhost:9000/api/bledevices/download");
+    window.location.assign("https://assign-meter-backend.onrender.com/api/bledevices/download");
   };
 
   return (
