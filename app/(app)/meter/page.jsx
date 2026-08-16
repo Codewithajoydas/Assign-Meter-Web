@@ -38,6 +38,8 @@ const statusStyles = {
   active: { backgroundColor: "#22c55e", color: "#fff" },
   rejected: { backgroundColor: "#6b7280", color: "#000000" },
   installed: { backgroundColor: "#3b82f6", color: "#000000" },
+  SUCCESS: { backgroundColor: "#22c55e", color: "#fff" },
+  FAILED: { backgroundColor: "#ef4444", color: "#fff" },
 };
 
 const SSE_URL =

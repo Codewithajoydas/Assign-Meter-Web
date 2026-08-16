@@ -1,11 +1,13 @@
 "use client";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import * as XLSX from "xlsx";
 
 export default function StatusUpdatePage() {
   const [file, setFile] = useState(null);
   const [dragging, setDragging] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [progress, setProgress] = useState(0); // 0-100
+  const xhrRef = useRef(null); // lets us cancel an in-flight upload if needed
 
   const processFile = async (file) => {
     try {
@@ -29,7 +31,6 @@ export default function StatusUpdatePage() {
   const handleFile = async (selectedFile) => {
     if (!selectedFile) return;
 
-    // Basic validation
     if (
       !selectedFile.name.endsWith(".xlsx") &&
       !selectedFile.name.endsWith(".xls")
@@ -39,6 +40,7 @@ export default function StatusUpdatePage() {
     }
 
     setFile(selectedFile);
+    setProgress(0);
     await processFile(selectedFile);
   };
 
@@ -64,6 +66,63 @@ export default function StatusUpdatePage() {
     handleFile(selectedFile);
   };
 
+  /**
+   * fetch() has no upload-progress event — the browser Fetch API only
+   * exposes a readable stream for the *response* body, not the request
+   * body, so there's no hook to report "X% of the file has been sent."
+   * XMLHttpRequest still does, via `upload.onprogress`, so we wrap it
+   * in a promise to keep the rest of the component async/await-friendly.
+   */
+  const uploadWithProgress = (formData) => {
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhrRef.current = xhr;
+
+      xhr.open("POST", "/api/updatestatus"); // leading slash: always resolves from site root
+
+      xhr.upload.onprogress = (event) => {
+        if (event.lengthComputable) {
+          const pct = Math.round((event.loaded / event.total) * 100);
+          setProgress(pct);
+        }
+      };
+
+      xhr.onload = () => {
+        xhrRef.current = null;
+        let data;
+        try {
+          data = JSON.parse(xhr.responseText);
+        } catch (parseErr) {
+          reject(new Error("Server returned an invalid response"));
+          return;
+        }
+
+        if (xhr.status >= 200 && xhr.status < 300) {
+          resolve({ status: xhr.status, data });
+        } else {
+          reject(
+            Object.assign(new Error(data?.error || "Upload failed"), {
+              status: xhr.status,
+              data,
+            }),
+          );
+        }
+      };
+
+      xhr.onerror = () => {
+        xhrRef.current = null;
+        reject(new Error("Network error during upload"));
+      };
+
+      xhr.onabort = () => {
+        xhrRef.current = null;
+        reject(new Error("Upload cancelled"));
+      };
+
+      xhr.send(formData);
+    });
+  };
+
   const handleUpload = async () => {
     if (!file) {
       alert("Select a file first");
@@ -71,30 +130,27 @@ export default function StatusUpdatePage() {
     }
 
     setLoading(true);
+    setProgress(0);
 
     try {
       const formData = new FormData();
       formData.append("file", file);
 
-      const res = await fetch("api/updatestatus", {
-        method: "POST",
-        body: formData,
-      });
-
-      const data = await res.json();
+      const { data } = await uploadWithProgress(formData);
       console.log("Server response:", data);
-
-      if (res.ok) {
-        alert("Upload successful");
-      } else {
-        alert("Upload failed");
-      }
+      alert("Upload successful");
     } catch (err) {
       console.error(err);
-      alert("Upload failed");
+      alert(err.message || "Upload failed");
+    } finally {
+      setLoading(false);
     }
+  };
 
+  const handleCancel = () => {
+    xhrRef.current?.abort();
     setLoading(false);
+    setProgress(0);
   };
 
   return (
@@ -152,6 +208,39 @@ export default function StatusUpdatePage() {
           </p>
         )}
 
+        {loading && (
+          <div style={{ width: "100%" }}>
+            <div
+              style={{
+                width: "100%",
+                height: 8,
+                background: "#e5e7eb",
+                borderRadius: 999,
+                overflow: "hidden",
+              }}
+            >
+              <div
+                style={{
+                  width: `${progress}%`,
+                  height: "100%",
+                  background: "#2563eb",
+                  transition: "width 150ms ease-out",
+                }}
+              />
+            </div>
+            <div className="flex justify-between text-xs text-gray-500 mt-1">
+              <span>{progress}%</span>
+              <button
+                type="button"
+                onClick={handleCancel}
+                className="underline"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
+
         <button
           onClick={handleUpload}
           disabled={loading}
@@ -161,9 +250,10 @@ export default function StatusUpdatePage() {
             borderRadius: 10,
             padding: 10,
             width: "100%",
+            opacity: loading ? 0.7 : 1,
           }}
         >
-          {loading ? "Uploading..." : "Upload to Server"}
+          {loading ? `Uploading... ${progress}%` : "Upload to Server"}
         </button>
         <a
           href="/Meter-Assign-Template.xlsx"
