@@ -11,6 +11,7 @@ import {
   PlugZap,
   Projector,
   SidebarIcon,
+  
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -30,7 +31,7 @@ const menuSections = [
     ],
   },
   {
-    title: "Workforce Management",
+    title: "Management Tools",
     items: [
       {
         name: "Create New User",
@@ -42,6 +43,11 @@ const menuSections = [
         icon: ParkingMeterIcon,
         path: "/statusupdate",
       },
+      {
+        name:"Generate Unmapped Report",
+        icon:ParkingMeterIcon,
+        path:"/generate-unmapped-report"
+      }
     ],
   },
 ];
