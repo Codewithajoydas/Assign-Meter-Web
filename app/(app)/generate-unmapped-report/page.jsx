@@ -53,7 +53,7 @@ export default function GenerateUnmappedReportPage() {
       formData.append("issue", files.issue);
       formData.append("mi", files.mi);
 
-      const res = await fetch("https://assign-meter-backend.onrender.com/api/generateReport", {
+      const res = await fetch("http://localhost:9000/api/generateReport", {
         method: "POST",
         body: formData,
       });
