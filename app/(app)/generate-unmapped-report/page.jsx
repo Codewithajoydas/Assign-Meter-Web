@@ -75,7 +75,7 @@ export default function GenerateUnmappedReportPage() {
   };
 
   // Send all three files to the backend and trigger a CSV download
-  const generateReport = useCallback(() => {
+  const generateReport = 
     async () => {
       if (!allFilesReady) return;
 
@@ -112,7 +112,7 @@ export default function GenerateUnmappedReportPage() {
         setIsGenerating(false);
       }
     };
-  }, [allFilesReady, files.comm, files.issue, files.mi]);
+  
 
   const get_last_generation_date = async () => {
     try {
