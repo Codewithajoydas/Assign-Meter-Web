@@ -1,7 +1,9 @@
 "use client";
 
-import { Download, FileDown } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { AlertTriangle, Download, FileDown, X } from "lucide-react";
+import { useEffect, useState } from "react";
+
+const BACKEND_URL = "https://assign-meter-backend.onrender.com";
 
 const REPORT_META = {
   comm: {
@@ -24,17 +26,41 @@ const REPORT_META = {
   },
 };
 
+// Pull a readable message out of a failed fetch response.
+// Handles: JSON error bodies, HTML error pages (404/500 dev pages), and network failures.
+async function extractErrorMessage(response, fallback) {
+  const contentType = response.headers.get("content-type") || "";
+
+  if (contentType.includes("application/json")) {
+    try {
+      const data = await response.json();
+      return data.error || data.message || fallback;
+    } catch {
+      return fallback;
+    }
+  }
+
+  // Non-JSON body (e.g. an HTML 404/500 page) — don't try to parse it, just report the status
+  return `${fallback} (status ${response.status})`;
+}
+
 export default function GenerateUnmappedReportPage() {
   const [lastGenerated, setLastGenerated] = useState(null);
+  const [errorMessage, setErrorMessage] = useState("");
+
   const downloadReport = async () => {
+    setErrorMessage("");
     try {
       const response = await fetch(
-        `https://assign-meter-backend.onrender.com/api/last-unmapped-report`,
+        `${BACKEND_URL}/api/last-unmapped-report`,
       );
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Failed to download report");
+        const message = await extractErrorMessage(
+          response,
+          "Failed to download report",
+        );
+        throw new Error(message);
       }
 
       // Get file
@@ -54,8 +80,10 @@ export default function GenerateUnmappedReportPage() {
       window.URL.revokeObjectURL(url);
     } catch (error) {
       console.error(error);
+      setErrorMessage(error.message || "Failed to download report");
     }
   };
+
   // Holds the three selected files, keyed by report type
   const [files, setFiles] = useState({
     comm: null,
@@ -75,62 +103,101 @@ export default function GenerateUnmappedReportPage() {
   };
 
   // Send all three files to the backend and trigger a CSV download
-  const generateReport = 
-    async () => {
-      if (!allFilesReady) return;
+  const generateReport = async () => {
+    if (!allFilesReady) return;
 
-      setIsGenerating(true);
-      setStatusText("Generating…");
+    setIsGenerating(true);
+    setStatusText("Generating…");
+    setErrorMessage("");
 
-      try {
-        const formData = new FormData();
-        formData.append("comm", files.comm);
-        formData.append("issue", files.issue);
-        formData.append("mi", files.mi);
+    try {
+      const formData = new FormData();
+      formData.append("comm", files.comm);
+      formData.append("issue", files.issue);
+      formData.append("mi", files.mi);
 
-        const res = await fetch("https://assign-meter-backend.onrender.com/api/generateReport", {
-          method: "POST",
-          body: formData,
-        });
+      const res = await fetch(`${BACKEND_URL}/api/generateReport`, {
+        method: "POST",
+        body: formData,
+      });
 
-        if (res.ok) {
-          const blob = await res.blob();
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement("a");
-          a.href = url;
-          a.download = "unmapped_report.csv";
-          a.click();
-          URL.revokeObjectURL(url);
-          setStatusText("Unmapped report generated");
-        } else {
-          setStatusText("Failed to generate report");
-        }
-      } catch (err) {
-        console.error(err);
+      if (res.ok) {
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "unmapped_report.csv";
+        a.click();
+        URL.revokeObjectURL(url);
+        setStatusText("Unmapped report generated");
+        // Refresh the "last generated" timestamp now that a new report exists
+        getLastGenerationDate();
+      } else {
+        const message = await extractErrorMessage(
+          res,
+          "Failed to generate report",
+        );
         setStatusText("Failed to generate report");
-      } finally {
-        setIsGenerating(false);
+        setErrorMessage(message);
       }
-    };
-  
+    } catch (err) {
+      console.error(err);
+      setStatusText("Failed to generate report");
+      setErrorMessage(err.message || "Failed to generate report");
+    } finally {
+      setIsGenerating(false);
+    }
+  };
 
-  const get_last_generation_date = async () => {
+  const getLastGenerationDate = async () => {
     try {
       const response = await fetch(
-        `https://assign-meter-backend.onrender.com/api/last-unmapped-report/last-modified`,
+        `${BACKEND_URL}/api/last-unmapped-report/last-modified`,
       );
+
+      if (!response.ok) {
+        const message = await extractErrorMessage(
+          response,
+          "Failed to fetch last generated date",
+        );
+        throw new Error(message);
+      }
+
       const data = await response.json();
       setLastGenerated(data.lastModified);
     } catch (error) {
       console.error(error);
+      setErrorMessage(error.message || "Failed to fetch last generated date");
     }
   };
+
   useEffect(() => {
-    get_last_generation_date();
+    getLastGenerationDate();
   }, []);
+
+  // Format the last-generated timestamp, guarding against null (no report generated yet)
+  const lastGeneratedLabel = lastGenerated
+    ? `${new Date(lastGenerated).toLocaleDateString()} - ${new Date(
+        lastGenerated,
+      ).toLocaleTimeString()}`
+    : "Not generated yet";
 
   return (
     <div style={styles.body}>
+      {errorMessage && (
+        <div style={styles.errorBanner}>
+          <AlertTriangle size={16} style={{ flexShrink: 0 }} />
+          <span style={styles.errorText}>{errorMessage}</span>
+          <button
+            onClick={() => setErrorMessage("")}
+            style={styles.errorDismiss}
+            aria-label="Dismiss error"
+          >
+            <X size={15} />
+          </button>
+        </div>
+      )}
+
       <div style={styles.pageHead}>
         <div style={styles.eyebrow}>Meter Management &middot; Reports</div>
         <h1 style={styles.h1}>Generate an unmapped report</h1>
@@ -139,9 +206,7 @@ export default function GenerateUnmappedReportPage() {
         </p>
         <button onClick={downloadReport} style={styles.lastReportLink}>
           <Download size={20} />
-          Download last unmapped report{" "}
-          {new Date(lastGenerated).toLocaleDateString()}-
-          {new Date(lastGenerated).toLocaleTimeString() ?? "Note Generated Yet"}
+          Download last unmapped report — {lastGeneratedLabel}
         </button>
       </div>
 
@@ -355,6 +420,32 @@ const styles = {
     color: "#1b1e1c",
     padding: "64px 24px 90px",
   },
+  errorBanner: {
+    maxWidth: 980,
+    margin: "0 auto 24px",
+    display: "flex",
+    alignItems: "center",
+    gap: 10,
+    padding: "12px 14px",
+    borderRadius: 10,
+    border: "1px solid #e8b4a8",
+    background: "#fdf1ee",
+    color: "#8c3a26",
+    fontSize: 13.5,
+  },
+  errorText: {
+    flex: 1,
+    lineHeight: 1.5,
+  },
+  errorDismiss: {
+    background: "none",
+    border: "none",
+    color: "#8c3a26",
+    cursor: "pointer",
+    padding: 2,
+    display: "flex",
+    alignItems: "center",
+  },
   pageHead: { maxWidth: 980, margin: "0 auto 44px" },
   eyebrow: {
     fontFamily: "'IBM Plex Mono', monospace",
@@ -371,7 +462,10 @@ const styles = {
     fontSize: 13,
     color: "#2f5d50",
     textDecoration: "underline",
-    cursor:"pointer"
+    background: "none",
+    border: "none",
+    padding: 0,
+    cursor: "pointer",
   },
   h1: {
     fontFamily: "'Space Grotesk', sans-serif",
