@@ -43,8 +43,30 @@ const statusStyles = {
 };
 
 const SSE_URL =
-  process.env.NEXT_PUBLIC_SSE_URL || "https://assign-meter-backend.onrender.com/events";
+  process.env.NEXT_PUBLIC_SSE_URL || `${process.env.NEXT_PUBLIC_BACKEND_URL}/events`;
 const LIMIT = 100;
+
+function StatusBadge({ status }) {
+  return (
+    <span
+      style={{
+        padding: "5px 9px",
+        textAlign: "center",
+        textTransform: "capitalize",
+        borderRadius: "4px",
+        fontSize: "11px",
+        display: "inline-block",
+        whiteSpace: "nowrap",
+        ...(statusStyles[status] || {
+          backgroundColor: "#e5e7eb",
+          color: "#000",
+        }),
+      }}
+    >
+      {status}
+    </span>
+  );
+}
 
 export default function Home() {
   const searchParams = useSearchParams();
@@ -65,8 +87,6 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Keep a live ref of `page` so the SSE handler always reads the
-  // current page without forcing the EventSource to reconnect.
   const pageRef = useRef(page);
   useEffect(() => {
     pageRef.current = page;
@@ -89,8 +109,6 @@ export default function Home() {
     if (status) query.set("status", status);
 
     try {
-      // hits OUR OWN API route, not the backend directly.
-      // browser automatically sends httpOnly cookies to same-origin requests.
       const res = await fetch(`/api/meters?${query.toString()}`, {
         method: "GET",
         cache: "no-store",
@@ -129,9 +147,6 @@ export default function Home() {
     fetchData();
   }, [fetchData]);
 
-  // ================= SSE (live updates) =================
-  // Connects once on mount. Uses `pageRef` instead of `page` as a
-  // dependency so navigating pages doesn't tear down/recreate the stream.
   useEffect(() => {
     const eventSource = new EventSource(SSE_URL, { withCredentials: true });
 
@@ -144,7 +159,6 @@ export default function Home() {
         return;
       }
 
-      // Backend broadcasts a batch: { insertedCount, meters: [...] }
       const newMeters = Array.isArray(payload?.meters) ? payload.meters : [];
       if (!newMeters.length) return;
 
@@ -171,7 +185,7 @@ export default function Home() {
     return () => {
       eventSource.close();
     };
-  }, []); // mount once, not tied to `page`
+  }, []);
 
   const createPageLink = (newPage) => {
     const params = new URLSearchParams(Array.from(searchParams.entries()));
@@ -193,27 +207,27 @@ export default function Home() {
   const pages = generatePages(totalPages, page);
 
   if (error === "Unauthorized") {
-    return <div className="p-10 text-red-500">Unauthorized</div>;
+    return <div className="p-6 sm:p-10 text-red-500">Unauthorized</div>;
   }
 
   if (error) {
-    return <div className="p-10 text-red-500">{error}</div>;
+    return <div className="p-6 sm:p-10 text-red-500">{error}</div>;
   }
 
   return (
-    <div className="p-2 min-h-screen">
+    <div className="p-2 sm:p-3 min-h-screen">
       {/* HEADER */}
-      <div className="flex pb-2 justify-between items-center mb-6 sticky top-16.25 bg-white">
+      <div className="flex flex-col gap-3 pb-3 mb-4 sm:mb-6 sticky top-16 sm:top-16.25 bg-white z-10">
         <div>
-          <h1 className="text-2xl font-semibold text-gray-800">
+          <h1 className="text-xl sm:text-2xl font-semibold text-gray-800">
             Meter Assignment
           </h1>
-          <p className="text-sm text-gray-500">
+          <p className="text-xs sm:text-sm text-gray-500">
             Manage and assign pending meters
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3 flex-wrap sm:flex-nowrap overflow-x-auto sm:overflow-visible -mx-2 px-2 sm:mx-0 sm:px-0 pb-1 sm:pb-0">
           <RefreshButton onClick={fetchData} />
           <SortButton />
           <FilterButton />
@@ -221,99 +235,162 @@ export default function Home() {
         </div>
       </div>
 
-      {/* TABLE */}
-      <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="bg-gray-100 text-gray-600 text-xs uppercase">
-              <tr>
-                {headers.map(({ label, icon: Icon }) => (
-                  <th
-                    key={label}
-                    className="px-2 py-3 text-left text-xs font-semibold text-gray-600 uppercase"
+      {/* ================= MOBILE: CARD LIST (below sm) ================= */}
+      <div className="sm:hidden space-y-3">
+        {loading ? (
+          <div className="text-center py-10 text-gray-500 text-sm">
+            Loading...
+          </div>
+        ) : rows.length > 0 ? (
+          rows.map((item, index) => (
+            <div
+              key={item._id}
+              className="bg-white rounded-xl shadow-sm border p-3.5 flex flex-col gap-2"
+            >
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <span className="text-[11px] text-gray-400">
+                    #{(page - 1) * LIMIT + index + 1}
+                  </span>
+                  <Link
+                    href={`/meter/${item.meterNumber}`}
+                    className="block font-bold text-sm text-gray-900"
                   >
-                    <div className="flex items-center gap-2">
-                      <Icon size={14} className="text-gray-400" />
-                      {label}
-                    </div>
-                  </th>
-                ))}
-              </tr>
-            </thead>
+                    {item.meterNumber}
+                  </Link>
+                </div>
+                <StatusBadge status={item.status} />
+              </div>
 
-            <tbody className="divide-y">
-              {loading ? (
+              <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-xs">
+                <div className="flex items-center gap-1.5 text-gray-500">
+                  <Calendar size={12} className="text-gray-400 shrink-0" />
+                  {new Date(item.createdAt).toLocaleDateString()}
+                </div>
+                <div className="flex items-center gap-1.5 text-gray-500">
+                  <Settings size={12} className="text-gray-400 shrink-0" />
+                  {item.meterType}
+                </div>
+                <div className="flex items-center gap-1.5 text-gray-500">
+                  <Wrench size={12} className="text-gray-400 shrink-0" />
+                  {item.installationType}
+                </div>
+                <div className="flex items-center gap-1.5 text-gray-500">
+                  <MapPin size={12} className="text-gray-400 shrink-0" />
+                  {item.storeLocation}
+                </div>
+                <div className="flex items-center gap-1.5 text-gray-500">
+                  <Building2 size={12} className="text-gray-400 shrink-0" />
+                  {item?.agency}
+                </div>
+                <div className="flex items-center gap-1.5 text-gray-500">
+                  <User size={12} className="text-gray-400 shrink-0" />
+                  {item?.supervisor?.name ?? "No Supervisor"}
+                </div>
+                <div className="flex items-center gap-1.5 text-blue-600 font-medium col-span-2 truncate">
+                  <User size={12} className="text-blue-400 shrink-0" />
+                  {item.installerId}
+                </div>
+              </div>
+            </div>
+          ))
+        ) : (
+          <div className="text-center py-10 text-gray-500 text-sm">
+            No pending meters found
+          </div>
+        )}
+      </div>
+
+      {/* ================= DESKTOP/TABLET: TABLE (sm and up) ================= */}
+      <div className="hidden sm:block w-full overflow-x-auto">
+        <div className="bg-white rounded-xl shadow-sm border overflow-hidden min-w-[900px] lg:min-w-0">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-gray-100 text-gray-600 text-xs uppercase">
                 <tr>
-                  <td colSpan="10" className="text-center py-10 text-gray-500">
-                    Loading...
-                  </td>
+                  {headers.map(({ label, icon: Icon }) => (
+                    <th
+                      key={label}
+                      className="px-2 lg:px-3 py-2 lg:py-3 text-left text-[11px] lg:text-xs font-semibold text-gray-600 uppercase whitespace-nowrap"
+                    >
+                      <div className="flex items-center gap-1.5 lg:gap-2">
+                        <Icon size={13} className="text-gray-400 shrink-0" />
+                        {label}
+                      </div>
+                    </th>
+                  ))}
                 </tr>
-              ) : rows.length > 0 ? (
-                rows.map((item, index) => (
-                  <tr key={item._id} className="hover:bg-gray-50">
-                    <td className="px-4 py-3 text-gray-500">
-                      {(page - 1) * LIMIT + index + 1}
-                    </td>
-                    <td className="px-4 py-3">
-                      {new Date(item.createdAt).toLocaleDateString()}
-                    </td>
-                    <td className="px-4 py-3 font-bold max-w-[140px] truncate whitespace-nowrap">
-                      <Link href={`/meter/${item.meterNumber}`}>
-                        {item.meterNumber}
-                      </Link>
-                    </td>
-                    <td className="px-4 py-3">{item.meterType}</td>
-                    <td className="px-4 py-3">{item.installationType}</td>
-                    <td className="px-4 py-3">{item.storeLocation}</td>
-                    <td className="px-4 py-3">{item?.agency}</td>
-                    <td className="px-4 py-3">
-                      {item?.supervisor?.name ?? "No Supervisor"}
-                    </td>
-                    <td className="px-4 py-3 text-blue-600 font-medium max-w-[140px] truncate whitespace-nowrap">
-                      {item.installerId}
-                    </td>
-                    <td>
-                      <span
-                        style={{
-                          padding: "6px 10px",
-                          textAlign: "center",
-                          textTransform: "capitalize",
-                          borderRadius: "4px",
-                          fontSize: "12px",
-                          display: "inline-block",
-                          ...(statusStyles[item.status] || {
-                            backgroundColor: "#e5e7eb",
-                            color: "#000",
-                          }),
-                        }}
-                      >
-                        {item.status}
-                      </span>
+              </thead>
+
+              <tbody className="divide-y">
+                {loading ? (
+                  <tr>
+                    <td colSpan="10" className="text-center py-10 text-gray-500">
+                      Loading...
                     </td>
                   </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan="10" className="text-center py-10 text-gray-500">
-                    No pending meters found
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+                ) : rows.length > 0 ? (
+                  rows.map((item, index) => (
+                    <tr key={item._id} className="hover:bg-gray-50">
+                      <td className="px-3 lg:px-4 py-2.5 lg:py-3 text-gray-500 whitespace-nowrap">
+                        {(page - 1) * LIMIT + index + 1}
+                      </td>
+                      <td className="px-3 lg:px-4 py-2.5 lg:py-3 whitespace-nowrap">
+                        {new Date(item.createdAt).toLocaleDateString()}
+                      </td>
+                      <td className="px-3 lg:px-4 py-2.5 lg:py-3 font-bold max-w-[140px] truncate whitespace-nowrap">
+                        <Link href={`/meter/${item.meterNumber}`}>
+                          {item.meterNumber}
+                        </Link>
+                      </td>
+                      <td className="px-3 lg:px-4 py-2.5 lg:py-3 whitespace-nowrap">
+                        {item.meterType}
+                      </td>
+                      <td className="px-3 lg:px-4 py-2.5 lg:py-3 whitespace-nowrap">
+                        {item.installationType}
+                      </td>
+                      <td className="px-3 lg:px-4 py-2.5 lg:py-3 whitespace-nowrap">
+                        {item.storeLocation}
+                      </td>
+                      <td className="px-3 lg:px-4 py-2.5 lg:py-3 whitespace-nowrap">
+                        {item?.agency}
+                      </td>
+                      <td className="px-3 lg:px-4 py-2.5 lg:py-3 whitespace-nowrap">
+                        {item?.supervisor?.name ?? "No Supervisor"}
+                      </td>
+                      <td className="px-3 lg:px-4 py-2.5 lg:py-3 text-blue-600 font-medium max-w-[140px] truncate whitespace-nowrap">
+                        {item.installerId}
+                      </td>
+                      <td className="px-2 lg:px-4 py-2.5 lg:py-3 whitespace-nowrap">
+                        <StatusBadge status={item.status} />
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="10" className="text-center py-10 text-gray-500">
+                      No pending meters found
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
 
       {/* FOOTER */}
-      <div className="flex justify-between items-center mt-4">
-        <div className="flex items-center gap-2">
-          <p className="text-sm text-gray-500">Showing {total} entries</p>
+      <div className="flex flex-col gap-3 sm:gap-4 justify-between items-center mt-4">
+        <div className="flex items-center gap-2 flex-wrap justify-center text-center">
+          <p className="text-xs sm:text-sm text-gray-500">
+            Showing {total} entries
+          </p>
           <DownloadAll count={total} />
         </div>
 
-        <div className="flex items-center gap-1 bg-white border rounded-lg shadow-sm overflow-hidden">
+        <div className="flex items-center gap-1 bg-white border rounded-lg shadow-sm overflow-x-auto max-w-full">
           <Link href={createPageLink(Math.max(1, page - 1))} prefetch>
-            <button className="px-3 py-2 text-sm hover:bg-gray-100 cursor-pointer">
+            <button className="px-2.5 sm:px-3 py-2 text-xs sm:text-sm hover:bg-gray-100 cursor-pointer whitespace-nowrap">
               Prev
             </button>
           </Link>
@@ -321,7 +398,7 @@ export default function Home() {
           {pages.map((num) => (
             <Link key={num} href={createPageLink(num)} prefetch>
               <button
-                className={`px-3 py-2 text-sm cursor-pointer ${
+                className={`px-2.5 sm:px-3 py-2 text-xs sm:text-sm cursor-pointer ${
                   num === page ? "bg-blue-600 text-white" : "hover:bg-gray-100"
                 }`}
               >
@@ -331,7 +408,7 @@ export default function Home() {
           ))}
 
           <Link href={createPageLink(Math.min(totalPages, page + 1))} prefetch>
-            <button className="px-3 py-2 text-sm hover:bg-gray-100 cursor-pointer">
+            <button className="px-2.5 sm:px-3 py-2 text-xs sm:text-sm hover:bg-gray-100 cursor-pointer whitespace-nowrap">
               Next
             </button>
           </Link>

@@ -32,7 +32,7 @@ export async function GET(request) {
 
   try {
     const res = await fetch(
-      `https://assign-meter-backend.onrender.com/api/getmeterdetails?${query.toString()}`,
+      `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/getmeterdetails?${query.toString()}`,
       {
         method: "GET",
         headers: {

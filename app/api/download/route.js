@@ -11,7 +11,7 @@
 
 //     const queryString = searchParams.toString();
 //     console.log("FINAL URL:", queryString.toString());
-//     const backendUrl = `https://assign-meter-backend.onrender.com/api/download${
+//     const backendUrl = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/download${
 //       queryString ? `?${queryString}` : ""
 //     }`;
 
@@ -60,7 +60,7 @@ export async function GET(req) {
 
     const queryString = searchParams.toString();
     console.log("FINAL URL:", queryString.toString());
-    const backendUrl = `https://assign-meter-backend.onrender.com/api/download${queryString ? `?${queryString}` : ""
+    const backendUrl = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/download${queryString ? `?${queryString}` : ""
       }`;
 
     const backendRes = await fetch(backendUrl, {

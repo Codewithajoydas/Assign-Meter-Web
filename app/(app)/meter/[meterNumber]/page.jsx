@@ -7,7 +7,7 @@ export default async function Page({ params }) {
   const access_token = cookieStore.get("access_token")?.value;
 
   const res = await fetch(
-    `https://assign-meter-backend.onrender.com/api/searchmeter?meterNumber=${paramss.meterNumber}`,
+    `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/searchmeter?meterNumber=${paramss.meterNumber}`,
     {
       headers: {
         Authorization: `Bearer ${access_token}`,

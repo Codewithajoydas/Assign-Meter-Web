@@ -4,7 +4,7 @@ import TemButton from "@/components/TemButton";
 
 // TODO: move to an env var (e.g. process.env.BACKEND_URL) so dev/staging/prod
 // don't require editing this file each time.
-const BACKEND_URL = "https://assign-meter-backend.onrender.com/api/bledevices";
+const BACKEND_URL = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/bledevices`;
 
 export default async function Page({ params }) {
   const cookieStore = await cookies();
@@ -22,6 +22,7 @@ export default async function Page({ params }) {
 
     if (!res.ok) {
       return (
+        // eslint-disable-next-line react-hooks/error-boundaries
         <div className="flex items-center justify-center h-screen bg-gray-50">
           <p className="text-gray-400">
             Backend returned an error (HTTP {res.status})
@@ -36,7 +37,7 @@ export default async function Page({ params }) {
     return (
       <div className="flex items-center justify-center h-screen bg-gray-50">
         <div className="text-center">
-          <p className="text-gray-500 font-medium">Can't reach the backend</p>
+          <p className="text-gray-500 font-medium">Can&apos;t reach the backend</p>
           <p className="text-gray-400 text-sm mt-1">
             {BACKEND_URL} — is the API server running?
           </p>
@@ -69,7 +70,7 @@ export default async function Page({ params }) {
        <TemButton/>
       </div>
       {/* Header End */}
-      <MapLoader
+      <MapLoader className="z-1"
         devices={located.map((d) => ({
           id: d._id,
           deviceId: d.deviceId,

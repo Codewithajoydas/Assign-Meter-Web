@@ -24,7 +24,7 @@ export async function POST(req) {
 
     // 4. Send to Express backend
     const response = await fetch(
-      "https://assign-meter-backend.onrender.com/api/statusupdate",
+      `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/statusupdate`,
       {
         method: "POST",
         headers: {

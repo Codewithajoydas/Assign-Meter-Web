@@ -3,7 +3,7 @@ import { Mulish } from "next/font/google";
 
 import "leaflet/dist/leaflet.css";
 import Sidebar from "@/components/Sidebar";
-import { SidebarProvider } from "@/contexts/Sidebar.context"; 
+import { SidebarProvider } from "@/contexts/Sidebar.context";
 import ProtectedRoute from "@/components/Protected";
 export const metadata = {
   title: "Assign Meter | Genus Power Infrastructure Ltd.",
@@ -23,7 +23,7 @@ export default function Layout({ children }) {
         <Header />
         <div className="flex justify-between">
           <Sidebar />
-          <main className="p-2 flex-1">{children}</main>
+          <main className="p-2 sm:p-2 flex-1 w-full min-w-0">{children}</main>
         </div>
       </div>
     </SidebarProvider>

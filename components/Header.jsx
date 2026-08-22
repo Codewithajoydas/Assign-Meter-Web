@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, usePathname } from "next/navigation";
-import { Menu, SearchIcon, Settings, User, Loader2 } from "lucide-react";
+import { Menu, SearchIcon, Settings, User, Loader2, X } from "lucide-react";
 import { useContext, useEffect, useState } from "react";
 import "./styles/css/header.css";
 import { SidebarContext } from "@/contexts/Sidebar.context";
@@ -10,7 +10,7 @@ const Header = () => {
   const { closed, setClosed } = useContext(SidebarContext);
   const router = useRouter();
   const pathname = usePathname();
-
+  const [closeMobileSearcbar, SetCloseMobileSearcbar] = useState(false);
   const [search, setSearch] = useState("");
   const [userName, setUserName] = useState("");
   const [email, setEmail] = useState("");
@@ -32,6 +32,7 @@ const Header = () => {
 
   // Stop loading after navigation completes
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(false);
   }, [pathname]);
 
@@ -52,7 +53,7 @@ const Header = () => {
   }, [search, router]);
 
   return (
-    <header className="sticky top-0 z-10 border-b bg-[#F8FAFC] px-2 py-3 flex items-center justify-between">
+    <header className="sticky top-0 z-10 border-b bg-[#F8FAFC] px-2 py-3 flex items-center justify-between flex-1">
       {/* Left */}
       <div className="flex items-center gap-2">
         <span
@@ -69,7 +70,7 @@ const Header = () => {
       </div>
 
       {/* Search */}
-      <search className="flex items-center gap-2">
+      <search className="items-center gap-2 hidden md:flex">
         <label
           htmlFor="searchMeter"
           className="flex items-center gap-2 p-2 rounded-lg border focus-within:outline-1 w-80"
@@ -109,8 +110,67 @@ const Header = () => {
         </button>
       </search>
 
+      {/* Search Mobile */}
+      {closeMobileSearcbar && (
+        <div className="w-full h-full bg-white absolute inset-0 z-10 flex justify-center items-center gap-2 md:hidden">
+          <label
+            htmlFor="searchMeter"
+            className="flex items-center gap-2 p-2 rounded-lg border focus-within:outline-1 w-80"
+          >
+            <SearchIcon size={20} />
+            <input
+              id="searchMeter"
+              type="search"
+              placeholder="Search Meter..."
+              className="outline-none w-8/10 text-sm"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") submitSearch();
+              }}
+            />
+          </label>
+
+          <button
+            type="button"
+            onClick={submitSearch}
+            disabled={loading}
+            className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm hover:bg-blue-700 disabled:opacity-70 disabled:cursor-not-allowed flex items-center gap-2"
+          >
+            {loading ? (
+              <>
+                <Loader2 size={18} className="animate-spin" />
+                Searching...
+              </>
+            ) : (
+              <>
+                <SearchIcon size={18} />
+                Search
+              </>
+            )}
+          </button>
+          {/* close search box button */}
+          <span
+            className="flex w-10 h-10 hover:bg-gray-200 justify-center items-center rounded-full cursor-pointer transition"
+            onClick={() => {
+              setSearch("");
+              SetCloseMobileSearcbar(false);
+            }}
+          >
+            <X size={20} />
+          </span>
+        </div>
+      )}
+
       {/* Right */}
       <span className="flex items-center gap-7 relative">
+        <span
+          onClick={() => SetCloseMobileSearcbar(true)}
+          className="flex md:hidden w-10 h-10 hover:bg-gray-200 justify-center items-center rounded-full cursor-pointer transition"
+        >
+          <SearchIcon size={20} />
+        </span>
+
         <span
           className="flex w-10 h-10 hover:bg-gray-200 justify-center items-center rounded-full cursor-pointer transition"
           onClick={() => router.push("/settings")}

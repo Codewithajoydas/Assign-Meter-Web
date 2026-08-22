@@ -21,7 +21,7 @@ export async function POST(req) {
   }
 
   const response = await fetch(
-    "https://assign-meter-backend.onrender.com/api/createuser",
+    `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/createuser`,
     {
       method: "POST",
       headers: {

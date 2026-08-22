@@ -3,7 +3,7 @@
 import { AlertTriangle, Download, FileDown, X } from "lucide-react";
 import { useEffect, useState } from "react";
 
-const BACKEND_URL = "https://assign-meter-backend.onrender.com";
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 
 const REPORT_META = {
   comm: {
@@ -51,9 +51,7 @@ export default function GenerateUnmappedReportPage() {
   const downloadReport = async () => {
     setErrorMessage("");
     try {
-      const response = await fetch(
-        `${BACKEND_URL}/api/last-unmapped-report`,
-      );
+      const response = await fetch(`${BACKEND_URL}/api/last-unmapped-report`);
 
       if (!response.ok) {
         const message = await extractErrorMessage(
@@ -103,49 +101,85 @@ export default function GenerateUnmappedReportPage() {
   };
 
   // Send all three files to the backend and trigger a CSV download
+  const [uploadProgress, setUploadProgress] = useState(0);
+
   const generateReport = async () => {
     if (!allFilesReady) return;
 
     setIsGenerating(true);
-    setStatusText("Generating…");
+    setUploadProgress(0);
+    setStatusText("Uploading… 0%");
     setErrorMessage("");
 
-    try {
-      const formData = new FormData();
-      formData.append("comm", files.comm);
-      formData.append("issue", files.issue);
-      formData.append("mi", files.mi);
+    const formData = new FormData();
+    formData.append("comm", files.comm);
+    formData.append("issue", files.issue);
+    formData.append("mi", files.mi);
 
-      const res = await fetch(`${BACKEND_URL}/api/generateReport`, {
-        method: "POST",
-        body: formData,
+    try {
+      const blob = await new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open("POST", `${BACKEND_URL}/api/generateReport`);
+        xhr.responseType = "blob";
+
+        xhr.upload.onprogress = (event) => {
+          if (event.lengthComputable) {
+            const percent = Math.round((event.loaded / event.total) * 100);
+            setUploadProgress(percent);
+            setStatusText(
+              percent < 100 ? `Uploading… ${percent}%` : "Processing…",
+            );
+          }
+        };
+
+        xhr.onload = () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            resolve(xhr.response);
+          } else {
+            // Try to parse error message out of the blob response
+            const reader = new FileReader();
+            reader.onload = () => {
+              try {
+                const data = JSON.parse(reader.result);
+                reject(
+                  new Error(
+                    data.error || data.message || "Failed to generate report",
+                  ),
+                );
+              } catch {
+                reject(
+                  new Error(`Failed to generate report (status ${xhr.status})`),
+                );
+              }
+            };
+            reader.onerror = () =>
+              reject(new Error("Failed to generate report"));
+            reader.readAsText(xhr.response);
+          }
+        };
+
+        xhr.onerror = () =>
+          reject(new Error("Network error while generating report"));
+
+        xhr.send(formData);
       });
 
-      if (res.ok) {
-        const blob = await res.blob();
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = "unmapped_report.csv";
-        a.click();
-        URL.revokeObjectURL(url);
-        setStatusText("Unmapped report generated");
-        // Refresh the "last generated" timestamp now that a new report exists
-        getLastGenerationDate();
-      } else {
-        const message = await extractErrorMessage(
-          res,
-          "Failed to generate report",
-        );
-        setStatusText("Failed to generate report");
-        setErrorMessage(message);
-      }
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "unmapped_report.csv";
+      a.click();
+      URL.revokeObjectURL(url);
+
+      setStatusText("Unmapped report generated");
+      getLastGenerationDate();
     } catch (err) {
       console.error(err);
       setStatusText("Failed to generate report");
       setErrorMessage(err.message || "Failed to generate report");
     } finally {
       setIsGenerating(false);
+      setUploadProgress(0);
     }
   };
 
@@ -238,7 +272,9 @@ export default function GenerateUnmappedReportPage() {
           disabled={!allFilesReady || isGenerating}
           onClick={generateReport}
         >
-          {isGenerating ? "Generating…" : "Generate unmapped report"}
+          {isGenerating
+            ? `Generating… ${uploadProgress}%`
+            : "Generate unmapped report"}
           <ArrowIcon />
         </button>
       </div>
@@ -253,6 +289,7 @@ function ReportCard({ type, file, onFileChange }) {
 
   return (
     <div
+    className="w-full md:w-1/3"
       style={{
         ...styles.card,
         ...(filled ? styles.cardFilled : {}),
@@ -415,10 +452,9 @@ function ArrowIcon() {
 // Inline style objects (swap for CSS modules / Tailwind if preferred)
 const styles = {
   body: {
-    minHeight: "100vh",
     fontFamily: "'Inter', sans-serif",
     color: "#1b1e1c",
-    padding: "64px 24px 90px",
+    padding:10
   },
   errorBanner: {
     maxWidth: 980,
@@ -484,9 +520,10 @@ const styles = {
   board: {
     maxWidth: 980,
     margin: "0 auto",
-    display: "grid",
-    gridTemplateColumns: "repeat(3, 1fr)",
+    display:"flex",
+    flexWrap:"wrap",
     gap: 16,
+    justifyContent: "center",
   },
   card: {
     position: "relative",

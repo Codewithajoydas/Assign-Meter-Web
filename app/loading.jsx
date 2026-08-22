@@ -9,9 +9,9 @@ export default function Loading() {
       //   justifyContent: "center",
       //   alignItems: "center",
       // }}
-      className="h-full w-full flex justify-center items-center font-bold"
+      className="h-screen w-screen flex justify-center items-center font-bold"
     >
-      Loading data...
+       Loading data...
     </div>
   );
 }

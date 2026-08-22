@@ -4,7 +4,7 @@ export async function POST(req) {
   const body = await req.json();
 
   const res = await fetch(
-    "https://assign-meter-backend.onrender.com/api/signin",
+    `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/signin`,
     {
       method: "POST",
       headers: {

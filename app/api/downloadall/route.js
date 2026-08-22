@@ -9,7 +9,7 @@ export async function GET() {
   }
 
   const backendRes = await fetch(
-    "https://assign-meter-backend.onrender.com/api/download/whole",
+    `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/download/whole`,
     {
       headers: {
         Authorization: `Bearer ${accessToken}`,
