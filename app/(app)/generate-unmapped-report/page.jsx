@@ -1,27 +1,61 @@
 "use client";
 
-import { Download } from "lucide-react";
-import { useState } from "react";
+import { Download, FileDown } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
 
 const REPORT_META = {
   comm: {
     tag: "RPT / COMM",
     title: "Communication Report",
     desc: "Connectivity and last-seen status across all meters.",
+    templateUrl: "/unmapped_template/comm-template.csv",
   },
   issue: {
     tag: "RPT / ISSUE",
     title: "Meter Issue Report",
-    desc: "Faults and flagged statuses from bulk uploads.",
+    desc: "List of meters issued by the store team.",
+    templateUrl: "/unmapped_template/issue-template.csv",
   },
   mi: {
     tag: "RPT / MI",
     title: "MI Report",
     desc: "Rolled-up management summary across the fleet.",
+    templateUrl: "/unmapped_template/mi-template.csv",
   },
 };
 
 export default function GenerateUnmappedReportPage() {
+  const [lastGenerated, setLastGenerated] = useState(null);
+  const downloadReport = async () => {
+    try {
+      const response = await fetch(
+        `https://assign-meter-backend.onrender.com/api/last-unmapped-report`,
+      );
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to download report");
+      }
+
+      // Get file
+      const blob = await response.blob();
+
+      // Download file
+      const url = window.URL.createObjectURL(blob);
+
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "unmapped-report.csv";
+
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error(error);
+    }
+  };
   // Holds the three selected files, keyed by report type
   const [files, setFiles] = useState({
     comm: null,
@@ -41,42 +75,59 @@ export default function GenerateUnmappedReportPage() {
   };
 
   // Send all three files to the backend and trigger a CSV download
-  const generateReport = async () => {
-    if (!allFilesReady) return;
+  const generateReport = useCallback(() => {
+    async () => {
+      if (!allFilesReady) return;
 
-    setIsGenerating(true);
-    setStatusText("Generating…");
+      setIsGenerating(true);
+      setStatusText("Generating…");
 
-    try {
-      const formData = new FormData();
-      formData.append("comm", files.comm);
-      formData.append("issue", files.issue);
-      formData.append("mi", files.mi);
+      try {
+        const formData = new FormData();
+        formData.append("comm", files.comm);
+        formData.append("issue", files.issue);
+        formData.append("mi", files.mi);
 
-      const res = await fetch("https://assign-meter-backend.onrender.com/api/generateReport", {
-        method: "POST",
-        body: formData,
-      });
+        const res = await fetch("https://assign-meter-backend.onrender.com/api/generateReport", {
+          method: "POST",
+          body: formData,
+        });
 
-      if (res.ok) {
-        const blob = await res.blob();
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = "unmapped_report.csv";
-        a.click();
-        URL.revokeObjectURL(url);
-        setStatusText("Unmapped report generated");
-      } else {
+        if (res.ok) {
+          const blob = await res.blob();
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = "unmapped_report.csv";
+          a.click();
+          URL.revokeObjectURL(url);
+          setStatusText("Unmapped report generated");
+        } else {
+          setStatusText("Failed to generate report");
+        }
+      } catch (err) {
+        console.error(err);
         setStatusText("Failed to generate report");
+      } finally {
+        setIsGenerating(false);
       }
-    } catch (err) {
-      console.error(err);
-      setStatusText("Failed to generate report");
-    } finally {
-      setIsGenerating(false);
+    };
+  }, [allFilesReady, files.comm, files.issue, files.mi]);
+
+  const get_last_generation_date = async () => {
+    try {
+      const response = await fetch(
+        `https://assign-meter-backend.onrender.com/api/last-unmapped-report/last-modified`,
+      );
+      const data = await response.json();
+      setLastGenerated(data.lastModified);
+    } catch (error) {
+      console.error(error);
     }
   };
+  useEffect(() => {
+    get_last_generation_date();
+  }, []);
 
   return (
     <div style={styles.body}>
@@ -86,9 +137,12 @@ export default function GenerateUnmappedReportPage() {
         <p style={styles.headParagraph}>
           Attach all three source files, then generate.
         </p>
-        <a href="https://assign-meter-backend.onrender.com/api/last-unmapped-report" style={styles.lastReportLink}>
-          <Download size={20} />Download last unmapped report
-        </a>
+        <button onClick={downloadReport} style={styles.lastReportLink}>
+          <Download size={20} />
+          Download last unmapped report{" "}
+          {new Date(lastGenerated).toLocaleDateString()}-
+          {new Date(lastGenerated).toLocaleTimeString() ?? "Note Generated Yet"}
+        </button>
       </div>
 
       <div style={styles.board}>
@@ -112,7 +166,9 @@ export default function GenerateUnmappedReportPage() {
         <button
           style={{
             ...styles.generateBtn,
-            ...(allFilesReady && !isGenerating ? {} : styles.generateBtnDisabled),
+            ...(allFilesReady && !isGenerating
+              ? {}
+              : styles.generateBtnDisabled),
           }}
           disabled={!allFilesReady || isGenerating}
           onClick={generateReport}
@@ -125,7 +181,7 @@ export default function GenerateUnmappedReportPage() {
   );
 }
 
-// Single report card: icon, check-mark, description, and file picker
+// Single report card: icon, check-mark, description, template link, and file picker
 function ReportCard({ type, file, onFileChange }) {
   const meta = REPORT_META[type];
   const filled = Boolean(file);
@@ -160,6 +216,11 @@ function ReportCard({ type, file, onFileChange }) {
       <h2 style={styles.cardTitle}>{meta.title}</h2>
       <p style={styles.cardDesc}>{meta.desc}</p>
 
+      <a href={meta.templateUrl} download style={styles.templateLink}>
+        <FileDown size={13} />
+        Download template
+      </a>
+
       <label
         style={{
           ...styles.fileSelect,
@@ -189,7 +250,14 @@ function ReportCard({ type, file, onFileChange }) {
 function CardIcon({ type }) {
   if (type === "comm") {
     return (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
         <path d="M4 12a8 8 0 0 1 16 0" />
         <path d="M7 12a5 5 0 0 1 10 0" />
         <circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none" />
@@ -199,7 +267,14 @@ function CardIcon({ type }) {
   }
   if (type === "issue") {
     return (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
         <path d="M12 3 2 20h20L12 3Z" />
         <path d="M12 10v4" />
         <circle cx="12" cy="17" r="0.9" fill="currentColor" stroke="none" />
@@ -207,7 +282,14 @@ function CardIcon({ type }) {
     );
   }
   return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       <path d="M4 19V10M11 19V5M18 19v-7" />
       <path d="M2 19h20" />
     </svg>
@@ -216,7 +298,14 @@ function CardIcon({ type }) {
 
 function CheckIcon() {
   return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.4"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       <path d="M5 12l5 5L19 7" />
     </svg>
   );
@@ -224,7 +313,16 @@ function CheckIcon() {
 
 function UploadIcon() {
   return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" width={14} height={14}>
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      width={14}
+      height={14}
+    >
       <path d="M12 3v12" />
       <path d="M7 8l5-5 5 5" />
       <path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" />
@@ -234,7 +332,16 @@ function UploadIcon() {
 
 function ArrowIcon() {
   return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width={15} height={15}>
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      width={15}
+      height={15}
+    >
       <path d="M5 12h14M13 6l6 6-6 6" />
     </svg>
   );
@@ -256,7 +363,7 @@ const styles = {
     textTransform: "uppercase",
     color: "#767b73",
   },
-  lastReportLink:{
+  lastReportLink: {
     display: "flex",
     alignItems: "center",
     gap: 6,
@@ -264,6 +371,7 @@ const styles = {
     fontSize: 13,
     color: "#2f5d50",
     textDecoration: "underline",
+    cursor:"pointer"
   },
   h1: {
     fontFamily: "'Space Grotesk', sans-serif",
@@ -356,6 +464,16 @@ const styles = {
     fontSize: 13,
     lineHeight: 1.55,
     color: "#767b73",
+  },
+  templateLink: {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: 6,
+    fontSize: 12,
+    fontFamily: "'IBM Plex Mono', monospace",
+    color: "#2f5d50",
+    textDecoration: "underline",
+    width: "fit-content",
   },
   fileSelect: {
     marginTop: "auto",
