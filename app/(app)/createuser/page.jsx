@@ -127,10 +127,7 @@ export default function WorkforceManage() {
         const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/createuser`, {
           method: "POST",
           credentials: "include",
-          headers: {
-            "Content-Type": "application/json",
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             name: form.name,
             email: form.email,
