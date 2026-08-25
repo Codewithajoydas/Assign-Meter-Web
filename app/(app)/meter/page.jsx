@@ -13,6 +13,9 @@ import {
   Building2,
   User,
   CheckCircle,
+  Trash2,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import RefreshButton from "@/components/RefreshButton";
 import FilterButton from "@/components/FilterButton";
@@ -31,38 +34,36 @@ const headers = [
   { label: "Supervisor", icon: User },
   { label: "Installer ID", icon: User },
   { label: "Status", icon: CheckCircle },
+  { label: "", icon: Trash2 },
 ];
 
-const statusStyles = {
-  pending: { backgroundColor: "#ef4444", color: "#ffffff" },
-  active: { backgroundColor: "#22c55e", color: "#fff" },
-  rejected: { backgroundColor: "#6b7280", color: "#000000" },
-  installed: { backgroundColor: "#3b82f6", color: "#000000" },
-  SUCCESS: { backgroundColor: "#22c55e", color: "#fff" },
-  FAILED: { backgroundColor: "#ef4444", color: "#fff" },
+// dot color + text color per status — used for the badge dot AND the card accent bar
+const statusColors = {
+  pending: { dot: "#ef4444", text: "#b91c1c", bg: "#fef2f2" },
+  active: { dot: "#22c55e", text: "#15803d", bg: "#f0fdf4" },
+  rejected: { dot: "#6b7280", text: "#374151", bg: "#f3f4f6" },
+  installed: { dot: "#3b82f6", text: "#1d4ed8", bg: "#eff6ff" },
+  SUCCESS: { dot: "#22c55e", text: "#15803d", bg: "#f0fdf4" },
+  FAILED: { dot: "#ef4444", text: "#b91c1c", bg: "#fef2f2" },
 };
+const fallbackStatus = { dot: "#9ca3af", text: "#374151", bg: "#f3f4f6" };
 
 const SSE_URL =
-  process.env.NEXT_PUBLIC_SSE_URL || `${process.env.NEXT_PUBLIC_BACKEND_URL}/events`;
+  process.env.NEXT_PUBLIC_SSE_URL ||
+  `${process.env.NEXT_PUBLIC_BACKEND_URL}/events`;
 const LIMIT = 100;
 
 function StatusBadge({ status }) {
+  const c = statusColors[status] || fallbackStatus;
   return (
     <span
-      style={{
-        padding: "5px 9px",
-        textAlign: "center",
-        textTransform: "capitalize",
-        borderRadius: "4px",
-        fontSize: "11px",
-        display: "inline-block",
-        whiteSpace: "nowrap",
-        ...(statusStyles[status] || {
-          backgroundColor: "#e5e7eb",
-          color: "#000",
-        }),
-      }}
+      className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-medium capitalize"
+      style={{ backgroundColor: c.bg, color: c.text }}
     >
+      <span
+        className="h-1.5 w-1.5 rounded-full shrink-0"
+        style={{ backgroundColor: c.dot }}
+      />
       {status}
     </span>
   );
@@ -86,7 +87,6 @@ export default function Home() {
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
   const pageRef = useRef(page);
   useEffect(() => {
     pageRef.current = page;
@@ -147,6 +147,33 @@ export default function Home() {
     fetchData();
   }, [fetchData]);
 
+  const handleDeleteMeters = async (meters) => {
+    try {
+      const confirmation = window.confirm("Are you sure you want to delete?");
+      if (!confirmation) {
+        return;
+      }
+      const res = await fetch(`/api/deletemeters`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ meters }),
+      });
+
+      const data = await res.json().catch(() => null);
+
+      if (!res.ok) {
+        throw new Error(data?.error || "Failed to delete meters");
+      }
+      alert("Meters deleted successfully");
+      fetchData();
+    } catch (error) {
+      console.error("Failed to delete meters:", error);
+      alert("Failed to delete meters");
+    }
+  };
+
   useEffect(() => {
     const eventSource = new EventSource(SSE_URL, { withCredentials: true });
 
@@ -161,8 +188,6 @@ export default function Home() {
 
       const newMeters = Array.isArray(payload?.meters) ? payload.meters : [];
       if (!newMeters.length) return;
-
-      console.log("New meters added via SSE:", newMeters);
 
       setRows((prev) => {
         if (pageRef.current !== 1) return prev;
@@ -207,211 +232,267 @@ export default function Home() {
   const pages = generatePages(totalPages, page);
 
   if (error === "Unauthorized") {
-    return <div className="p-6 sm:p-10 text-red-500">Unauthorized</div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-white to-red-50/40">
+        <div className="text-red-500 font-medium">Unauthorized</div>
+      </div>
+    );
   }
 
   if (error) {
-    return <div className="p-6 sm:p-10 text-red-500">{error}</div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-white to-red-50/40">
+        <div className="text-red-500 font-medium">{error}</div>
+      </div>
+    );
   }
 
   return (
-    <div className="p-2 sm:p-3 min-h-screen">
-      {/* HEADER */}
-      <div className="flex flex-col gap-3 pb-3 mb-4 sm:mb-6 sticky top-16 sm:top-16.25 bg-white z-10">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-semibold text-gray-800">
-            Meter Assignment
-          </h1>
-          <p className="text-xs sm:text-sm text-gray-500">
-            Manage and assign pending meters
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2 sm:gap-3 flex-wrap sm:flex-nowrap overflow-x-auto sm:overflow-visible -mx-2 px-2 sm:mx-0 sm:px-0 pb-1 sm:pb-0">
-          <RefreshButton fn={fetchData} />
-          <SortButton />
-          <FilterButton />
-          <DownloadButton />
-        </div>
-      </div>
-
-      {/* ================= MOBILE: CARD LIST (below sm) ================= */}
-      <div className="sm:hidden space-y-3">
-        {loading ? (
-          <div className="text-center py-10 text-gray-500 text-sm">
-            Loading...
-          </div>
-        ) : rows.length > 0 ? (
-          rows.map((item, index) => (
-            <div
-              key={item._id}
-              className="bg-white rounded-xl shadow-sm border p-3.5 flex flex-col gap-2"
-            >
-              <div className="flex items-start justify-between gap-2">
-                <div>
-                  <span className="text-[11px] text-gray-400">
-                    #{(page - 1) * LIMIT + index + 1}
-                  </span>
-                  <Link
-                    href={`/meter/${item.meterNumber}`}
-                    className="block font-bold text-sm text-gray-900"
-                  >
-                    {item.meterNumber}
-                  </Link>
-                </div>
-                <StatusBadge status={item.status} />
+    <div className="min-h-screen ">
+      <div className="p-2 sm:p-3">
+        {/* HEADER */}
+        <div className="flex flex-col gap-3 pb-3 mb-4 sm:mb-6 sticky top-16 sm:top-16.25 bg-white/80 backdrop-blur-md z-10 border-b border-gray-100">
+          <div className="flex items-center justify-between gap-3 pt-1">
+            <div>
+              <div className="flex items-center gap-2.5">
+                <span className="h-6 w-1 rounded-full bg-gradient-to-b from-blue-500 to-blue-700" />
+                <h1 className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight">
+                  Meter Assignment
+                </h1>
               </div>
-
-              <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-xs">
-                <div className="flex items-center gap-1.5 text-gray-500">
-                  <Calendar size={12} className="text-gray-400 shrink-0" />
-                  {new Date(item.createdAt).toLocaleDateString()}
-                </div>
-                <div className="flex items-center gap-1.5 text-gray-500">
-                  <Settings size={12} className="text-gray-400 shrink-0" />
-                  {item.meterType}
-                </div>
-                <div className="flex items-center gap-1.5 text-gray-500">
-                  <Wrench size={12} className="text-gray-400 shrink-0" />
-                  {item.installationType}
-                </div>
-                <div className="flex items-center gap-1.5 text-gray-500">
-                  <MapPin size={12} className="text-gray-400 shrink-0" />
-                  {item.storeLocation}
-                </div>
-                <div className="flex items-center gap-1.5 text-gray-500">
-                  <Building2 size={12} className="text-gray-400 shrink-0" />
-                  {item?.agency}
-                </div>
-                <div className="flex items-center gap-1.5 text-gray-500">
-                  <User size={12} className="text-gray-400 shrink-0" />
-                  {item?.supervisor?.name ?? "No Supervisor"}
-                </div>
-                <div className="flex items-center gap-1.5 text-blue-600 font-medium col-span-2 truncate">
-                  <User size={12} className="text-blue-400 shrink-0" />
-                  {item.installerId}
-                </div>
-              </div>
+              <p className="text-xs sm:text-sm text-gray-500 mt-0.5 ml-3.5">
+                Manage and assign pending meters
+              </p>
             </div>
-          ))
-        ) : (
-          <div className="text-center py-10 text-gray-500 text-sm">
-            No pending meters found
+            <span className="hidden sm:inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-700 border border-blue-100">
+              {total} total
+            </span>
           </div>
-        )}
-      </div>
 
-      {/* ================= DESKTOP/TABLET: TABLE (sm and up) ================= */}
-      <div className="hidden sm:block w-full overflow-x-auto">
-        <div className="bg-white rounded-xl shadow-sm border overflow-hidden min-w-[900px] lg:min-w-0">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-gray-100 text-gray-600 text-xs uppercase">
-                <tr>
-                  {headers.map(({ label, icon: Icon }) => (
-                    <th
-                      key={label}
-                      className="px-2 lg:px-3 py-2 lg:py-3 text-left text-[11px] lg:text-xs font-semibold text-gray-600 uppercase whitespace-nowrap"
-                    >
-                      <div className="flex items-center gap-1.5 lg:gap-2">
-                        <Icon size={13} className="text-gray-400 shrink-0" />
-                        {label}
-                      </div>
-                    </th>
-                  ))}
-                </tr>
-              </thead>
+          <div className="flex items-center gap-2 sm:gap-3 flex-wrap sm:flex-nowrap overflow-x-auto sm:overflow-visible -mx-2 px-2 sm:mx-0 sm:px-0 pb-2 sm:pb-0">
+            <RefreshButton fn={fetchData} />
+            <SortButton />
+            <FilterButton />
+            <DownloadButton />
+          </div>
+        </div>
 
-              <tbody className="divide-y">
-                {loading ? (
+        {/* ================= MOBILE: CARD LIST (below sm) ================= */}
+        <div className="sm:hidden space-y-2.5">
+          {loading ? (
+            <div className="text-center py-14 text-gray-400 text-sm">
+              Loading meters…
+            </div>
+          ) : rows.length > 0 ? (
+            rows.map((item, index) => {
+              const c = statusColors[item.status] || fallbackStatus;
+              return (
+                <div
+                  key={item._id}
+                  className="relative bg-white rounded-lg shadow-[0_1px_3px_rgba(0,0,0,0.06)] border border-gray-100 pl-4 pr-3.5 py-3 flex flex-col gap-2 overflow-hidden"
+                >
+                  <span
+                    className="absolute left-0 top-0 bottom-0 w-1"
+                    style={{ backgroundColor: c.dot }}
+                  />
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <span className="text-[10px] text-gray-400 font-medium">
+                        #{(page - 1) * LIMIT + index + 1}
+                      </span>
+                      <Link
+                        href={`/meter/${item.meterNumber}`}
+                        className="block font-bold text-sm text-gray-900 hover:text-blue-600 transition-colors"
+                      >
+                        {item.meterNumber}
+                      </Link>
+                    </div>
+                    <StatusBadge status={item.status} />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-xs">
+                    <div className="flex items-center gap-1.5 text-gray-500">
+                      <Calendar size={12} className="text-gray-400 shrink-0" />
+                      {new Date(item.createdAt).toLocaleDateString()}
+                    </div>
+                    <div className="flex items-center gap-1.5 text-gray-500">
+                      <Settings size={12} className="text-gray-400 shrink-0" />
+                      {item.meterType}
+                    </div>
+                    <div className="flex items-center gap-1.5 text-gray-500">
+                      <Wrench size={12} className="text-gray-400 shrink-0" />
+                      {item.installationType}
+                    </div>
+                    <div className="flex items-center gap-1.5 text-gray-500">
+                      <MapPin size={12} className="text-gray-400 shrink-0" />
+                      {item.storeLocation}
+                    </div>
+                    <div className="flex items-center gap-1.5 text-gray-500">
+                      <Building2 size={12} className="text-gray-400 shrink-0" />
+                      {item?.agency}
+                    </div>
+                    <div className="flex items-center gap-1.5 text-gray-500">
+                      <User size={12} className="text-gray-400 shrink-0" />
+                      {item?.supervisor?.name ?? "No Supervisor"}
+                    </div>
+                    <div className="flex items-center gap-1.5 text-blue-600 font-medium col-span-2 truncate">
+                      <User size={12} className="text-blue-400 shrink-0" />
+                      {item.installerId}
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => handleDeleteMeters([item._id])}
+                    className="self-end mt-1 inline-flex items-center gap-1 text-[11px] font-medium text-red-500 hover:text-red-600 active:scale-95 transition"
+                  >
+                    <Trash2 size={13} />
+                    Remove
+                  </button>
+                </div>
+              );
+            })
+          ) : (
+            <div className="text-center py-14 text-gray-400 text-sm">
+              No pending meters found
+            </div>
+          )}
+        </div>
+
+        {/* ================= DESKTOP/TABLET: TABLE (sm and up) ================= */}
+        <div className="hidden sm:block w-full overflow-x-auto">
+          <div className="relative bg-white rounded-xl shadow-[0_1px_3px_rgba(0,0,0,0.06)] border border-gray-100 overflow-hidden min-w-[900px] lg:min-w-0">
+            <div className="h-[3px] bg-gradient-to-r from-blue-500 via-blue-400 to-blue-200" />
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-gray-50/80 text-gray-500">
                   <tr>
-                    <td colSpan="10" className="text-center py-10 text-gray-500">
-                      Loading...
-                    </td>
+                    {headers.map(({ label, icon: Icon }) => (
+                      <th
+                        key={label || "actions"}
+                        className="px-3 lg:px-4 py-2.5 lg:py-3 text-left text-[10.5px] lg:text-[11px] font-semibold uppercase tracking-wider whitespace-nowrap"
+                      >
+                        <div className="flex items-center gap-1.5">
+                          <Icon size={12.5} className="text-gray-400 shrink-0" />
+                          {label}
+                        </div>
+                      </th>
+                    ))}
                   </tr>
-                ) : rows.length > 0 ? (
-                  rows.map((item, index) => (
-                    <tr key={item._id} className="hover:bg-gray-50">
-                      <td className="px-3 lg:px-4 py-2.5 lg:py-3 text-gray-500 whitespace-nowrap">
-                        {(page - 1) * LIMIT + index + 1}
-                      </td>
-                      <td className="px-3 lg:px-4 py-2.5 lg:py-3 whitespace-nowrap">
-                        {new Date(item.createdAt).toLocaleDateString()}
-                      </td>
-                      <td className="px-3 lg:px-4 py-2.5 lg:py-3 font-bold max-w-[140px] truncate whitespace-nowrap">
-                        <Link href={`/meter/${item.meterNumber}`}>
-                          {item.meterNumber}
-                        </Link>
-                      </td>
-                      <td className="px-3 lg:px-4 py-2.5 lg:py-3 whitespace-nowrap">
-                        {item.meterType}
-                      </td>
-                      <td className="px-3 lg:px-4 py-2.5 lg:py-3 whitespace-nowrap">
-                        {item.installationType}
-                      </td>
-                      <td className="px-3 lg:px-4 py-2.5 lg:py-3 whitespace-nowrap">
-                        {item.storeLocation}
-                      </td>
-                      <td className="px-3 lg:px-4 py-2.5 lg:py-3 whitespace-nowrap">
-                        {item?.agency}
-                      </td>
-                      <td className="px-3 lg:px-4 py-2.5 lg:py-3 whitespace-nowrap">
-                        {item?.supervisor?.name ?? "No Supervisor"}
-                      </td>
-                      <td className="px-3 lg:px-4 py-2.5 lg:py-3 text-blue-600 font-medium max-w-[140px] truncate whitespace-nowrap">
-                        {item.installerId}
-                      </td>
-                      <td className="px-2 lg:px-4 py-2.5 lg:py-3 whitespace-nowrap">
-                        <StatusBadge status={item.status} />
+                </thead>
+
+                <tbody className="divide-y divide-gray-100">
+                  {loading ? (
+                    <tr>
+                      <td colSpan="11" className="text-center py-14 text-gray-400">
+                        Loading meters…
                       </td>
                     </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan="10" className="text-center py-10 text-gray-500">
-                      No pending meters found
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+                  ) : rows.length > 0 ? (
+                    rows.map((item, index) => {
+                      const c = statusColors[item.status] || fallbackStatus;
+                      return (
+                        <tr
+                          key={item._id}
+                          className="group hover:bg-blue-50/30 transition-colors border-l-2 border-l-transparent hover:border-l-blue-400"
+                        >
+                          <td className="px-3 lg:px-4 py-2.5 lg:py-3 text-gray-400 whitespace-nowrap text-xs">
+                            {(page - 1) * LIMIT + index + 1}
+                          </td>
+                          <td className="px-3 lg:px-4 py-2.5 lg:py-3 whitespace-nowrap text-gray-600">
+                            {new Date(item.createdAt).toLocaleDateString()}
+                          </td>
+                          <td className="px-3 lg:px-4 py-2.5 lg:py-3 font-bold max-w-[140px] truncate whitespace-nowrap">
+                            <Link
+                              href={`/meter/${item.meterNumber}`}
+                              className="text-gray-900 group-hover:text-blue-600 transition-colors"
+                            >
+                              {item.meterNumber}
+                            </Link>
+                          </td>
+                          <td className="px-3 lg:px-4 py-2.5 lg:py-3 whitespace-nowrap text-gray-600">
+                            {item.meterType}
+                          </td>
+                          <td className="px-3 lg:px-4 py-2.5 lg:py-3 whitespace-nowrap text-gray-600">
+                            {item.installationType}
+                          </td>
+                          <td className="px-3 lg:px-4 py-2.5 lg:py-3 whitespace-nowrap text-gray-600">
+                            {item.storeLocation}
+                          </td>
+                          <td className="px-3 lg:px-4 py-2.5 lg:py-3 whitespace-nowrap text-gray-600">
+                            {item?.agency}
+                          </td>
+                          <td className="px-3 lg:px-4 py-2.5 lg:py-3 whitespace-nowrap text-gray-600">
+                            {item?.supervisor?.name ?? (
+                              <span className="text-gray-300">No Supervisor</span>
+                            )}
+                          </td>
+                          <td className="px-3 lg:px-4 py-2.5 lg:py-3 text-blue-600 font-medium max-w-[140px] truncate whitespace-nowrap">
+                            {item.installerId}
+                          </td>
+                          <td className="px-2 lg:px-4 py-2.5 lg:py-3 whitespace-nowrap">
+                            <StatusBadge status={item.status} />
+                          </td>
+                          <td className="px-2 lg:px-4 py-2.5 lg:py-3 whitespace-nowrap">
+                            <button
+                              className="p-1.5 rounded-md text-gray-300 hover:text-red-500 hover:bg-red-50 ring-1 ring-transparent hover:ring-red-100 transition-all"
+                              onClick={() => handleDeleteMeters([item._id])}
+                              title="Remove"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  ) : (
+                    <tr>
+                      <td colSpan="11" className="text-center py-14 text-gray-400">
+                        No pending meters found
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* FOOTER */}
-      <div className="flex flex-col gap-3 sm:gap-4 justify-between items-center mt-4">
-        <div className="flex items-center gap-2 flex-wrap justify-center text-center">
-          <p className="text-xs sm:text-sm text-gray-500">
-            Showing {total} entries
-          </p>
-          <DownloadAll count={total} />
-        </div>
+        {/* FOOTER */}
+        <div className="flex flex-col gap-3 sm:gap-4 justify-between items-center mt-5">
+          <div className="flex items-center gap-2 flex-wrap justify-center text-center">
+            <p className="text-xs sm:text-sm text-gray-500">
+              Showing <span className="font-semibold text-gray-700">{total}</span> entries
+            </p>
+            <DownloadAll count={total} />
+          </div>
 
-        <div className="flex items-center gap-1 bg-white border rounded-lg shadow-sm overflow-x-auto max-w-full">
-          <Link href={createPageLink(Math.max(1, page - 1))} prefetch>
-            <button className="px-2.5 sm:px-3 py-2 text-xs sm:text-sm hover:bg-gray-100 cursor-pointer whitespace-nowrap">
-              Prev
-            </button>
-          </Link>
-
-          {pages.map((num) => (
-            <Link key={num} href={createPageLink(num)} prefetch>
-              <button
-                className={`px-2.5 sm:px-3 py-2 text-xs sm:text-sm cursor-pointer ${
-                  num === page ? "bg-blue-600 text-white" : "hover:bg-gray-100"
-                }`}
-              >
-                {num}
+          <div className="flex items-center gap-0.5 bg-white border border-gray-100 rounded-full shadow-[0_1px_3px_rgba(0,0,0,0.06)] p-1 overflow-x-auto max-w-full">
+            <Link href={createPageLink(Math.max(1, page - 1))} prefetch>
+              <button className="p-1.5 sm:p-2 rounded-full text-gray-500 hover:bg-gray-100 disabled:opacity-40 cursor-pointer">
+                <ChevronLeft size={16} />
               </button>
             </Link>
-          ))}
 
-          <Link href={createPageLink(Math.min(totalPages, page + 1))} prefetch>
-            <button className="px-2.5 sm:px-3 py-2 text-xs sm:text-sm hover:bg-gray-100 cursor-pointer whitespace-nowrap">
-              Next
-            </button>
-          </Link>
+            {pages.map((num) => (
+              <Link key={num} href={createPageLink(num)} prefetch>
+                <button
+                  className={`h-7 w-7 sm:h-8 sm:w-8 rounded-full text-xs sm:text-sm cursor-pointer transition-all ${
+                    num === page
+                      ? "bg-gradient-to-b from-blue-500 to-blue-600 text-white shadow-sm font-semibold"
+                      : "text-gray-600 hover:bg-gray-100"
+                  }`}
+                >
+                  {num}
+                </button>
+              </Link>
+            ))}
+
+            <Link href={createPageLink(Math.min(totalPages, page + 1))} prefetch>
+              <button className="p-1.5 sm:p-2 rounded-full text-gray-500 hover:bg-gray-100 cursor-pointer">
+                <ChevronRight size={16} />
+              </button>
+            </Link>
+          </div>
         </div>
       </div>
     </div>
