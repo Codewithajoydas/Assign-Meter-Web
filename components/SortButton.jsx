@@ -28,7 +28,7 @@ export default function SortButton() {
       }`}
       onClick={handleSort}
     >
-      {sortValue === "asc" ? <SortAsc size={16} /> : <SortDesc size={16} />}
+      {sortValue === "asc" ? <SortDesc size={16} /> : <SortAsc size={16} />}
       Sort by Date
     </button>
   );

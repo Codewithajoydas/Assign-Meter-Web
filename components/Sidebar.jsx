@@ -35,7 +35,7 @@ const menuSections = [
   {
     title: "Management Tools",
     items: [
-      { name: "Create New User", icon: Gauge, path: "/createuser" },
+      { name: "Create New User", icon: Gauge, path: "/workforce" },
       { name: "Assign Meter", icon: ParkingMeterIcon, path: "/statusupdate" },
       {
         name: "Generate Unmapped Report",

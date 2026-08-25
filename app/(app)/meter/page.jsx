@@ -228,7 +228,7 @@ export default function Home() {
         </div>
 
         <div className="flex items-center gap-2 sm:gap-3 flex-wrap sm:flex-nowrap overflow-x-auto sm:overflow-visible -mx-2 px-2 sm:mx-0 sm:px-0 pb-1 sm:pb-0">
-          <RefreshButton onClick={fetchData} />
+          <RefreshButton fn={fetchData} />
           <SortButton />
           <FilterButton />
           <DownloadButton />
