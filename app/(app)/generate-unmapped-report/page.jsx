@@ -51,7 +51,7 @@ export default function GenerateUnmappedReportPage() {
   const downloadReport = async () => {
     setErrorMessage("");
     try {
-      const response = await fetch(`${BACKEND_URL}/api/last-unmapped-report`);
+      const response = await fetch(`/api/reports/last-unmapped-report`);
 
       if (!response.ok) {
         const message = await extractErrorMessage(
@@ -119,7 +119,7 @@ export default function GenerateUnmappedReportPage() {
     try {
       const blob = await new Promise((resolve, reject) => {
         const xhr = new XMLHttpRequest();
-        xhr.open("POST", `${BACKEND_URL}/api/generateReport`);
+        xhr.open("POST", `/api/reports/generate-unmapped-report`);
         xhr.responseType = "blob";
 
         xhr.upload.onprogress = (event) => {
@@ -186,7 +186,7 @@ export default function GenerateUnmappedReportPage() {
   const getLastGenerationDate = async () => {
     try {
       const response = await fetch(
-        `${BACKEND_URL}/api/last-unmapped-report/last-modified`,
+        `/api/reports/last-modified-date`,
       );
 
       if (!response.ok) {

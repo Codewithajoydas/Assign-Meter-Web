@@ -2,7 +2,7 @@
 import { Lock, Mail } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-export default function SignupForm() {
+export default function SigninFrom() {
   const router = useRouter();
 
   const [email, setEmail] = useState("");
@@ -22,6 +22,7 @@ export default function SignupForm() {
       });
       const data = await res.json();
       if (res.ok) {
+        localStorage.setItem("user:data", JSON.stringify(data?.data?.user));
         router.push("/");
       } else {
         console.log("response", res);

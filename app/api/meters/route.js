@@ -1,3 +1,4 @@
+import { handleBackendResponse } from "@/lib/handleBackendResponse";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
@@ -43,10 +44,7 @@ export async function GET(request) {
     );
 
     if (!res.ok) {
-      return NextResponse.json(
-        { error: "Failed to fetch data" },
-        { status: res.status }
-      );
+      return handleBackendResponse(res);
     }
 
     const data = await res.json();

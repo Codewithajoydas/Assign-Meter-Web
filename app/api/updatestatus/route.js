@@ -1,3 +1,4 @@
+import { handleBackendResponse } from "@/lib/handleBackendResponse";
 import { cookies } from "next/headers";
 
 export async function POST(req) {
@@ -33,7 +34,7 @@ export async function POST(req) {
         body: newFormData,
       },
     );
-
+if(!response.ok) return handleBackendResponse(response);
     const data = await response.json();
 
     return Response.json(data, { status: response.status });

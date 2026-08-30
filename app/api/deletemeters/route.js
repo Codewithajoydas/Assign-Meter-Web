@@ -1,3 +1,4 @@
+import { handleBackendResponse } from "@/lib/handleBackendResponse";
 import { cookies } from "next/headers";
 
 export async function DELETE(req) {
@@ -28,9 +29,10 @@ export async function DELETE(req) {
         body: JSON.stringify(body),
       },
     );
-
+    if(!backendRes.ok) {
+      return handleBackendResponse(backendRes);
+    }
     const data = await backendRes.json();
-
     return Response.json(data, {
       status: backendRes.status,
     });

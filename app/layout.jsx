@@ -1,3 +1,4 @@
+import SWPushSetup from "@/components/SWPushSetup";
 import "./globals.css";
 import { Mulish } from "next/font/google";
 

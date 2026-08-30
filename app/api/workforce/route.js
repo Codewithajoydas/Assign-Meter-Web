@@ -1,3 +1,4 @@
+import { handleBackendResponse } from "@/lib/handleBackendResponse";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
@@ -71,7 +72,9 @@ export async function GET() {
 
       cache: "no-store",
     });
-
+    if (!response.ok) {
+      return handleBackendResponse(response);
+    }
     return forwardResponse(response);
   } catch (error) {
     console.error("GET /api/workforce:", error);
@@ -110,15 +113,15 @@ export async function POST(request) {
     }
 
     const body = await request.json();
-
+    console.log(body);
     const response = await fetch(`${BACKEND_URL}/api/createuser`, {
       method: "POST",
-
       headers: getAuthHeaders(token, true),
-
       body: JSON.stringify(body),
     });
-
+    if (!response.ok) {
+      return handleBackendResponse(response);
+    }
     return forwardResponse(response);
   } catch (error) {
     console.error("POST /api/workforce:", error);
@@ -165,7 +168,9 @@ export async function PATCH(request) {
 
       body: JSON.stringify(body),
     });
-
+    if (!response.ok) {
+      return handleBackendResponse(response);
+    }
     return forwardResponse(response);
   } catch (error) {
     console.error("PATCH /api/workforce:", error);
@@ -212,7 +217,9 @@ export async function DELETE(request) {
 
       body: JSON.stringify(body),
     });
-
+    if (!response.ok) {
+      return handleBackendResponse(response);
+    }
     return forwardResponse(response);
   } catch (error) {
     console.error("DELETE /api/workforce:", error);
