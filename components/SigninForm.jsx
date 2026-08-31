@@ -13,7 +13,7 @@ export default function SigninFrom() {
     e.preventDefault();
     try {
       setLoading(true);
-      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/signin`, {
+      const res = await fetch(`/api/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
