@@ -47,10 +47,18 @@ async function extractErrorMessage(response, fallback) {
 export default function GenerateUnmappedReportPage() {
   const [lastGenerated, setLastGenerated] = useState(null);
   const [errorMessage, setErrorMessage] = useState("");
+  const [token, setToken] = useState("");
+
+  useEffect(() => {
+    (async ()=>{
+      await fetch("/api/get-token").then((res) => res.text()).then((token) => setToken(token));
+    })()
+  }, [token]);
 
   const downloadReport = async () => {
     setErrorMessage("");
     try {
+    
       const response = await fetch(`/api/reports/last-unmapped-report`);
 
       if (!response.ok) {
@@ -123,6 +131,7 @@ export default function GenerateUnmappedReportPage() {
           "POST",
           `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/generateReport`,
         );
+        xhr.setRequestHeader("Authorization", `Bearer ${token}`);``
         xhr.withCredentials = true;
 
         xhr.responseType = "blob";
