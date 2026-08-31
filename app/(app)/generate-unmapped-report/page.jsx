@@ -119,7 +119,12 @@ export default function GenerateUnmappedReportPage() {
     try {
       const blob = await new Promise((resolve, reject) => {
         const xhr = new XMLHttpRequest();
-        xhr.open("POST", `/api/reports/generate-unmapped-report`);
+        xhr.open(
+          "POST",
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/generateReport`,
+        );
+        xhr.withCredentials = true;
+
         xhr.responseType = "blob";
 
         xhr.upload.onprogress = (event) => {
@@ -185,9 +190,7 @@ export default function GenerateUnmappedReportPage() {
 
   const getLastGenerationDate = async () => {
     try {
-      const response = await fetch(
-        `/api/reports/last-modified-date`,
-      );
+      const response = await fetch(`/api/reports/last-modified-date`);
 
       if (!response.ok) {
         const message = await extractErrorMessage(
@@ -289,7 +292,7 @@ function ReportCard({ type, file, onFileChange }) {
 
   return (
     <div
-    className="w-full md:w-1/3"
+      className="w-full md:w-1/3"
       style={{
         ...styles.card,
         ...(filled ? styles.cardFilled : {}),
@@ -454,7 +457,7 @@ const styles = {
   body: {
     fontFamily: "'Inter', sans-serif",
     color: "#1b1e1c",
-    padding:10
+    padding: 10,
   },
   errorBanner: {
     maxWidth: 980,
@@ -520,8 +523,8 @@ const styles = {
   board: {
     maxWidth: 980,
     margin: "0 auto",
-    display:"flex",
-    flexWrap:"wrap",
+    display: "flex",
+    flexWrap: "wrap",
     gap: 16,
     justifyContent: "center",
   },
