@@ -19,11 +19,12 @@ const Header = () => {
   useEffect(() => {
     (async function () {
       try {
-        const res = await fetch("/api/getuserdetails");
-        const data = await res.json();
-
-        setUserName(data.userData?.name || "");
-        setEmail(data.userData?.email || "");
+       // get user details from localstorage
+        const user = JSON.parse(localStorage.getItem("user:data"));
+        if (user) {
+          setUserName(user.name);
+          setEmail(user.email);
+        }
       } catch (err) {
         console.error(err);
       }
